@@ -5,15 +5,15 @@ using Mono.Data.Sqlite;
 
 namespace GameScript
 {
-    public class System
+    public class Version
     {
-        public const string TABLE_NAME = "system";
+        public const string TABLE_NAME = "version";
         public long id { get; set; }
         public string version { get; set; }
 
-        public static System FromReader(SqliteDataReader reader)
+        public static Version FromReader(SqliteDataReader reader)
         {
-            System obj = new();
+            Version obj = new();
             obj.id = reader.GetValue(0) is DBNull
                 ? 0
                 : reader.GetInt64(0)

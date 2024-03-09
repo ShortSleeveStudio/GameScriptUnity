@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Mono.Data.Sqlite;
 using UnityEditor;
 using UnityEngine;
+using static Database;
 
 namespace GameScript
 {
@@ -96,7 +97,7 @@ namespace GameScript
                                     // Column name
                                     string columnName = reader.GetString(1);
                                     bool startsWithIs = columnName.StartsWith("is"); // it's a bool
-                                    // Column type 
+                                    // Column type
                                     string columnType = reader.GetString(2);
                                     DatabaseType type;
                                     switch (columnType)
@@ -177,7 +178,7 @@ namespace GameScript
             using (StreamWriter writer = new StreamWriter(
                 Path.Combine(outputDirectory, "RoutineType.cs")))
             {
-                WriteLine(writer, 0, "// GENERATED CODE - DO NOT EDIT BY HAND");
+                WriteLine(writer, 0, $"// {Constants.GENERATED_CODE_WARNING}");
                 WriteLine(writer, 0, "");
                 WriteLine(writer, 0, $"namespace {Constants.APP_NAME}");
                 WriteLine(writer, 0, "{");
@@ -212,7 +213,7 @@ namespace GameScript
                     WriteLine(writer, 0, "{");
                     WriteLine(writer, 1, $"public class {friendlyTableName}");
                     WriteLine(writer, 1, "{");
-                    // Table Name 
+                    // Table Name
                     WriteLine(writer, 2, $"public const string TABLE_NAME = \"{entry.Key}\";");
                     // Fields
                     for (int i = 0; i < entry.Value.Count; i++)
@@ -243,12 +244,6 @@ namespace GameScript
                     WriteLine(writer, 0, "}");
                 }
             }
-        }
-
-        static void WriteLine(StreamWriter writer, int depth, string toWrite)
-        {
-            if (depth > 0) writer.WriteLine(new string(' ', depth * 4) + toWrite);
-            else writer.WriteLine(toWrite);
         }
 
         static string DatabaseTypeToDefaultValue(DatabaseType type)
