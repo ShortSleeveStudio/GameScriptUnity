@@ -1,0 +1,8 @@
+{
+    "files.eol": "\n",
+    "editor.rulers": [100],
+    "[csharp]": {
+      "editor.defaultFormatter": "ms-dotnettools.csharp",
+      "editor.formatOnSave": true
+    }
+}
