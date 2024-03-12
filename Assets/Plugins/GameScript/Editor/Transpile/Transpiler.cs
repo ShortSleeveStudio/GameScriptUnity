@@ -7,6 +7,8 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 using static Database;
+using Antlr4.Runtime;
+using Antlr4.Runtime.Tree;
 
 namespace GameScript
 {
@@ -60,7 +62,6 @@ namespace GameScript
                                 read = true;
                                 Routines routine = Routines.FromReader(reader);
                                 importString = routine.code;
-                                Debug.Log("IMPORT IMPORT IMPORT" + importString);
                             }
                         }
                     }
@@ -86,6 +87,7 @@ namespace GameScript
                     using (StreamWriter writer = new StreamWriter(
                         Path.Combine(outputDirectory, "RoutineDirectory.cs")))
                     {
+                        writer.NewLine = "\n";
                         WriteLine(writer, 0, $"// {Constants.GENERATED_CODE_WARNING}");
                         WriteLine(writer, 0, importString);
                         WriteLine(writer, 0, "");
@@ -94,8 +96,10 @@ namespace GameScript
                         WriteLine(writer, 1,
                             $"public static class {Constants.ROUTINE_DIRECTORY_CLASS}");
                         WriteLine(writer, 1, "{");
-                        WriteLine(writer, 2, $"public static System.Action[] Directory "
-                            + $"= new System.Action[{routineCount + 1}];"); // Add one for noop
+                        // +1 for noop
+                        WriteLine(writer, 2, $"public static System.Action<ConversationContext>[] "
+                            + "Directory = new System.Action<ConversationContext>["
+                            + $"{routineCount + 1}];");
                         WriteLine(writer, 2, $"static {Constants.ROUTINE_DIRECTORY_CLASS}()");
                         WriteLine(writer, 2, "{");
 
@@ -134,6 +138,9 @@ namespace GameScript
                                                     routine, writer, flagCache, currentIndex);
                                                 break;
                                             case (int)RoutineType.Import:
+                                                WriteRoutine(
+                                                    new() { code = "" }, writer, flagCache,
+                                                    currentIndex);
                                                 break;
                                             default:
                                                 throw new Exception(
@@ -152,10 +159,13 @@ namespace GameScript
                         WriteLine(writer, 1, "}"); // Class
                         WriteLine(writer, 0, "}"); // Namespace
                     }
-
-                    // Report done
-                    Progress.Report(progressId, 1f, "Done");
                 }
+
+                // Write flags
+                WriteFlags(outputDirectory, flagCache);
+
+                // Report done
+                Progress.Report(progressId, 1f, "Done");
             }
             catch (Exception e)
             {
@@ -171,12 +181,66 @@ namespace GameScript
             Routines routine, StreamWriter writer, HashSet<string> flagCache,
             int methodIndex)
         {
-            WriteLine(writer, 3, $"Directory[{methodIndex}] = () =>");
+            WriteLine(writer, 3, $"Directory[{methodIndex}] = (ConversationContext ctx) =>");
             WriteLine(writer, 3, "{");
-            WriteLine(writer, 4, "/* Code Goes Here");
-            WriteLine(writer, 4, routine.code);
-            WriteLine(writer, 4, "*/");
+
+            // Create parser
+            TranspileErrorListener errorListener = new();
+            ICharStream stream = CharStreams.fromString(routine.code.Trim());
+            CSharpRoutineLexer lexer = new CSharpRoutineLexer(stream);
+            ITokenStream tokens = new CommonTokenStream(lexer);
+            CSharpRoutineParser parser = new(tokens)
+            {
+                BuildParseTree = true,
+            };
+            lexer.RemoveErrorListeners();
+            parser.RemoveErrorListeners();
+            parser.AddErrorListener(errorListener);
+            try
+            {
+                IParseTree tree = routine.isCondition ? parser.expression() : parser.routine();
+                string generatedCode = TranspilingTreeWalker.Transpile(tree, flagCache, routine);
+                if (generatedCode.Length > 0)
+                {
+                    string[] lines = generatedCode.Split("\n");
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        WriteLine(writer, 4, lines[i]);
+                    }
+                    WriteLine(writer, 0, "");
+                }
+            }
+            catch (Exception e)
+            {
+                WriteLine(writer, 3, $"    /* Error in routine: {routine.id} */");
+                Debug.LogError($"Transpilation error in routine {routine.id} at "
+                    + $"line: {errorListener.ErrorLine} "
+                    + $"column: {errorListener.ErrorColumn} "
+                    + $"message: {errorListener.ErrorMessage}");
+                Debug.LogException(e);
+            }
             WriteLine(writer, 3, "};");
+        }
+
+        static void WriteFlags(string outputDirectory, HashSet<string> flagCache)
+        {
+            using (StreamWriter writer = new StreamWriter(
+                Path.Combine(outputDirectory, $"{Constants.ROUTINE_FLAG_ENUM}.cs")))
+            {
+                writer.NewLine = "\n";
+                WriteLine(writer, 0, $"// {Constants.GENERATED_CODE_WARNING}");
+                WriteLine(writer, 0, "");
+                WriteLine(writer, 0, $"namespace {Constants.APP_NAME}");
+                WriteLine(writer, 0, "{");
+                WriteLine(writer, 1, $"public enum {Constants.ROUTINE_FLAG_ENUM}");
+                WriteLine(writer, 1, "{");
+                foreach (string flag in flagCache)
+                {
+                    WriteLine(writer, 2, flag + ",");
+                }
+                WriteLine(writer, 1, "}"); // enum
+                WriteLine(writer, 0, "}"); // namespace
+            }
         }
     }
 }

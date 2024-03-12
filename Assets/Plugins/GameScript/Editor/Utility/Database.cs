@@ -12,4 +12,10 @@ public static class Database
         if (depth > 0) writer.WriteLine(new string(' ', depth * 4) + toWrite);
         else writer.WriteLine(toWrite);
     }
+
+    public static void WriteNoLine(StreamWriter writer, int depth, string toWrite)
+    {
+        if (depth > 0) writer.Write(new string(' ', depth * 4) + toWrite);
+        else writer.Write(toWrite);
+    }
 }
