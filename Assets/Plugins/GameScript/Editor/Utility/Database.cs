@@ -1,21 +1,10 @@
-using System.IO;
-
-public static class Database
+namespace GameScript
 {
-    public static string SQLitePathToURI(string path)
+    public static class Database
     {
-        return "URI=file:" + path;
-    }
-
-    public static void WriteLine(StreamWriter writer, int depth, string toWrite)
-    {
-        if (depth > 0) writer.WriteLine(new string(' ', depth * 4) + toWrite);
-        else writer.WriteLine(toWrite);
-    }
-
-    public static void WriteNoLine(StreamWriter writer, int depth, string toWrite)
-    {
-        if (depth > 0) writer.Write(new string(' ', depth * 4) + toWrite);
-        else writer.Write(toWrite);
+        public static string SQLitePathToURI(string path)
+        {
+            return "URI=file:" + path;
+        }
     }
 }

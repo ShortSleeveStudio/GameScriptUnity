@@ -1,27 +1,30 @@
 using System;
+using UnityEngine;
 
 namespace GameScript
 {
     public class ConversationContext
     {
-        private const int MAX_BLOCKS = 64;
-        private const int MAX_SIGNALS = 64;
-
         private RoutineState m_RoutineState;
         private Conversation m_Conversation;
         private ConversationNode m_Node;
 
-        public ConversationContext(Type flagType)
+        public ConversationContext(Settings settings)
         {
-            m_RoutineState = new(Enum.GetValues(flagType).Length);
+            m_RoutineState
+                = new(settings.MaxScheduledBlocks, settings.MaxSignals, settings.MaxFlags);
         }
 
         #region Conversation
-        public ConversationNode GetCurrentNode() => m_Node;
-        public void SetCurrentNode(ConversationNode node) => m_Node = node;
         public Conversation GetCurrentConversation() => m_Conversation;
         public void SetCurrentConversation(Conversation conversation)
             => m_Conversation = conversation;
+        public ConversationNode GetCurrentNode() => m_Node;
+        public void SetCurrentNode(ConversationNode node) => m_Node = node;
+        #endregion
+
+        #region Execution
+
         #endregion
 
         #region Routines
@@ -36,6 +39,8 @@ namespace GameScript
         public bool IsBlockExecuted(int blockIndex) => m_RoutineState.IsBlockExecuted(blockIndex);
         public void SetBlockExecuted(int blockIndex) => m_RoutineState.SetBlockExecuted(blockIndex);
         public Signal AcquireSignal(int blockIndex) => m_RoutineState.AcquireSignal(blockIndex);
+        public bool HaveBlockSignalsFired(int blockIndex)
+            => m_RoutineState.HaveBlockSignalsFired(blockIndex);
         #endregion
 
         #region Flags
@@ -52,11 +57,12 @@ namespace GameScript
             private bool m_IsCondition;
             private bool m_ConditionResult;
 
-            public RoutineState(int flagCount)
+            public RoutineState(uint maxScheduledBlocks, uint maxSignals, uint maxFlags)
             {
-                m_Blocks = new ScheduledBlock[MAX_BLOCKS];
+                m_Blocks = new ScheduledBlock[maxScheduledBlocks];
+                for (uint i = 0; i < maxScheduledBlocks; i++) m_Blocks[i] = new(maxSignals);
                 m_BlocksInUse = 0;
-                m_FlagState = new bool[flagCount];
+                m_FlagState = new bool[maxFlags];
                 m_IsCondition = false;
                 m_ConditionResult = false;
             }
@@ -76,6 +82,8 @@ namespace GameScript
             public bool IsBlockExecuted(int blockIndex) => m_Blocks[blockIndex].HasExecuted();
             public void SetBlockExecuted(int blockIndex) => m_Blocks[blockIndex].SetExecuted();
             public Signal AcquireSignal(int blockIndex) => m_Blocks[blockIndex].AcquireSignal();
+            public bool HaveBlockSignalsFired(int blockIndex)
+                => m_Blocks[blockIndex].HaveAllSignalsFired();
 
             public bool GetConditionResult()
             {
@@ -112,13 +120,18 @@ namespace GameScript
             private int m_CurrentSignal;
             private bool m_Executed;
 
-            public ScheduledBlock()
+            public ScheduledBlock(uint maxSignals)
             {
-                m_Signals = new Signal[MAX_SIGNALS];
+                m_Signals = new Signal[maxSignals];
                 m_Executed = false;
-                m_SignalState = new bool[MAX_SIGNALS];
+                m_SignalState = new bool[maxSignals];
                 m_CurrentSignal = 0;
-                for (int i = 0; i < MAX_SIGNALS; i++) m_Signals[i] = () => m_SignalState[i] = true;
+                for (uint i = 0; i < maxSignals; i++)
+                {
+                    // Capture variable
+                    uint index = i;
+                    m_Signals[i] = () => m_SignalState[index] = true;
+                }
             }
 
             public Signal AcquireSignal() => m_Signals[m_CurrentSignal++];
@@ -139,7 +152,7 @@ namespace GameScript
             {
                 m_Executed = false;
                 m_CurrentSignal = 0;
-                for (int i = 0; i < MAX_SIGNALS; i++) m_SignalState[i] = false;
+                for (int i = 0; i < m_SignalState.Length; i++) m_SignalState[i] = false;
             }
         }
         #endregion

@@ -1,7 +1,9 @@
 {
     "name": "studio.shortsleeve.gamescript.Editor",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:78a33473d3d70e94493e48617d30180a"
+    ],
     "includePlatforms": [
         "Editor"
     ],

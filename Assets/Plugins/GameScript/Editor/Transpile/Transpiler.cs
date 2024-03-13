@@ -6,7 +6,8 @@ using Mono.Data.Sqlite;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
-using static Database;
+using static GameScript.StringWriter;
+using static GameScript.Database;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 
@@ -15,9 +16,11 @@ namespace GameScript
     public class Transpiler
     {
 
-        public static async void Transpile(string sqliteDatabasePath, string outputDirectory)
+        public static async void Transpile(
+            string sqliteDatabasePath, string routineOutputDirectory, string flagOutputDirectory)
         {
-            await Task.Run(() => TranspileAsync(sqliteDatabasePath, outputDirectory));
+            await Task.Run(()
+                => TranspileAsync(sqliteDatabasePath, routineOutputDirectory, flagOutputDirectory));
             AssetDatabase.Refresh();
         }
 
@@ -25,7 +28,8 @@ namespace GameScript
          * This will build an array of Action's that will be looked up by index. The final index
          * contains the "noop" Action used for all empty/null routines.
          */
-        static void TranspileAsync(string sqliteDatabasePath, string outputDirectory)
+        static void TranspileAsync(
+            string sqliteDatabasePath, string routineOutputDirectory, string flagOutputDirectory)
         {
             // Create flag cache
             HashSet<string> flagCache = new();
@@ -84,32 +88,34 @@ namespace GameScript
                     }
 
                     // Fetch all routines
-                    using (StreamWriter writer = new StreamWriter(
-                        Path.Combine(outputDirectory, "RoutineDirectory.cs")))
+                    string path = Path.Combine(
+                        routineOutputDirectory, $"{EditorConstants.ROUTINE_INITIALIZER_CLASS}.cs");
+                    using (StreamWriter writer = new StreamWriter(path))
                     {
                         writer.NewLine = "\n";
-                        WriteLine(writer, 0, $"// {Constants.GENERATED_CODE_WARNING}");
+                        WriteLine(writer, 0, $"// {EditorConstants.GENERATED_CODE_WARNING}");
                         WriteLine(writer, 0, importString);
                         WriteLine(writer, 0, "");
-                        WriteLine(writer, 0, $"namespace {Constants.APP_NAME}");
+                        WriteLine(writer, 0, $"namespace {RuntimeConstants.APP_NAME}");
                         WriteLine(writer, 0, "{");
                         WriteLine(writer, 1,
-                            $"public static class {Constants.ROUTINE_DIRECTORY_CLASS}");
+                            $"public static class {EditorConstants.ROUTINE_INITIALIZER_CLASS}");
                         WriteLine(writer, 1, "{");
-                        // +1 for noop
-                        WriteLine(writer, 2, $"public static System.Action<ConversationContext>[] "
-                            + "Directory = new System.Action<ConversationContext>["
-                            + $"{routineCount + 1}];");
-                        WriteLine(writer, 2, $"static {Constants.ROUTINE_DIRECTORY_CLASS}()");
+                        WriteLine(writer, 2, "[UnityEngine.RuntimeInitializeOnLoadMethod("
+                            + "UnityEngine.RuntimeInitializeLoadType.BeforeSplashScreen)]");
+                        WriteLine(writer, 2, $"private static void Initialize()");
                         WriteLine(writer, 2, "{");
+                        // +1 for noop
+                        WriteLine(writer, 3, $"RoutineDirectory.Directory "
+                            + $"= new System.Action<ConversationContext>[{routineCount + 1}];");
 
                         // Write Routines
                         int currentIndex = 0;
-                        for (int i = 0; i < routineCount; i += Constants.SQL_BATCH_SIZE)
+                        for (int i = 0; i < routineCount; i += EditorConstants.SQL_BATCH_SIZE)
                         {
                             Progress.Report(
                                 progressId, (float)i / routineCount, "Transpiling routines");
-                            int limit = Constants.SQL_BATCH_SIZE;
+                            int limit = EditorConstants.SQL_BATCH_SIZE;
                             int offset = i;
                             string query = $"SELECT * FROM {Routines.TABLE_NAME} "
                                 + $"{routineWhereClause} "
@@ -162,7 +168,7 @@ namespace GameScript
                 }
 
                 // Write flags
-                WriteFlags(outputDirectory, flagCache);
+                WriteFlags(flagOutputDirectory, flagCache);
 
                 // Report done
                 Progress.Report(progressId, 1f, "Done");
@@ -181,7 +187,8 @@ namespace GameScript
             Routines routine, StreamWriter writer, HashSet<string> flagCache,
             int methodIndex)
         {
-            WriteLine(writer, 3, $"Directory[{methodIndex}] = (ConversationContext ctx) =>");
+            WriteLine(writer, 3,
+                $"RoutineDirectory.Directory[{methodIndex}] = (ConversationContext ctx) =>");
             WriteLine(writer, 3, "{");
 
             // Create parser
@@ -207,7 +214,6 @@ namespace GameScript
                     {
                         WriteLine(writer, 4, lines[i]);
                     }
-                    WriteLine(writer, 0, "");
                 }
             }
             catch (Exception e)
@@ -224,15 +230,16 @@ namespace GameScript
 
         static void WriteFlags(string outputDirectory, HashSet<string> flagCache)
         {
-            using (StreamWriter writer = new StreamWriter(
-                Path.Combine(outputDirectory, $"{Constants.ROUTINE_FLAG_ENUM}.cs")))
+            string path = Path.Combine(outputDirectory, $"{EditorConstants.ROUTINE_FLAG_ENUM}.cs");
+            if (File.Exists(path)) File.Delete(path);
+            using (StreamWriter writer = new StreamWriter(path))
             {
                 writer.NewLine = "\n";
-                WriteLine(writer, 0, $"// {Constants.GENERATED_CODE_WARNING}");
+                WriteLine(writer, 0, $"// {EditorConstants.GENERATED_CODE_WARNING}");
                 WriteLine(writer, 0, "");
-                WriteLine(writer, 0, $"namespace {Constants.APP_NAME}");
+                WriteLine(writer, 0, $"namespace {RuntimeConstants.APP_NAME}");
                 WriteLine(writer, 0, "{");
-                WriteLine(writer, 1, $"public enum {Constants.ROUTINE_FLAG_ENUM}");
+                WriteLine(writer, 1, $"public enum {EditorConstants.ROUTINE_FLAG_ENUM}");
                 WriteLine(writer, 1, "{");
                 foreach (string flag in flagCache)
                 {

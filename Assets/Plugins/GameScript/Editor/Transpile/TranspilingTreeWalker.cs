@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Antlr4.Runtime.Tree;
+using static GameScript.StringWriter;
 
 namespace GameScript
 {
@@ -49,13 +50,13 @@ namespace GameScript
             // Walk
             if (m_IsCondition)
             {
-                m_Accumulator.Append("ctx.SetConditionResult");
-                m_Accumulator.Append("(");
+                AppendNoLine(m_Accumulator, 0, "ctx.SetConditionResult");
+                AppendNoLine(m_Accumulator, 0, "(");
             }
             Walk(tree);
             if (m_IsCondition)
             {
-                m_Accumulator.Append(");");
+                AppendNoLine(m_Accumulator, 0, ");");
             }
         }
 
@@ -93,11 +94,11 @@ namespace GameScript
                     {
                         if (m_IsBlock)
                         {
-                            m_Accumulator.Append(terminalNode.Symbol.Text);
+                            AppendNoLine(m_Accumulator, 0, terminalNode.Symbol.Text);
                         }
                         else
                         {
-                            m_ScheduledBlocks[^1].Code.Append(terminalNode.Symbol.Text);
+                            AppendNoLine(m_ScheduledBlocks[^1].Code, 0, terminalNode.Symbol.Text);
                         }
                     }
                     break;
@@ -145,51 +146,54 @@ namespace GameScript
             // Write routine body
             if (m_ScheduledBlocks.Count > 0)
             {
-                m_Accumulator.Append($"ctx.SetBlocksInUse({m_ScheduledBlocks.Count});\n");
+                AppendLine(m_Accumulator, 0, $"ctx.SetBlocksInUse({m_ScheduledBlocks.Count});");
             }
             for (int i = 0; i < m_ScheduledBlocks.Count; i++)
             {
                 // Grab Scheduled Block
                 ScheduledBlockBuilder scheduledBlock = m_ScheduledBlocks[i];
 
-                // Execution Condition Check
-                m_Accumulator.Append("if (");
-
-                // Make sure block hasn't already executed
-                m_Accumulator.Append($"!ctx.IsBlockExecuted({i})");
-
-                // Check if required flags are set
-                foreach (string entryFlag in scheduledBlock.EntryFlags)
+                // Execution Flag Condition Check
+                if (scheduledBlock.EntryFlags.Count > 0)
                 {
-                    m_Accumulator.Append(
-                        $" && ctx.IsFlagSet((int){Constants.ROUTINE_FLAG_ENUM}.{entryFlag})");
+                    bool first = true;
+                    AppendNoLine(m_Accumulator, 0, "if (");
+                    foreach (string entryFlag in scheduledBlock.EntryFlags)
+                    {
+                        if (first) first = false;
+                        else AppendNoLine(m_Accumulator, 0, " && ");
+                        AppendNoLine(m_Accumulator, 0, "ctx.IsFlagSet((int)"
+                            + $"{EditorConstants.ROUTINE_FLAG_ENUM}.{entryFlag})");
+                    }
+                    AppendLine(m_Accumulator, 0, ")");
                 }
 
-                // Execution condition end
-                m_Accumulator.Append(")\n");
-
                 // Execution code start
-                m_Accumulator.Append("{\n");
+                AppendLine(m_Accumulator, 0, "{");
 
                 // Execution code
+                AppendLine(m_Accumulator, 1, $"if (!ctx.IsBlockExecuted({i}))");
+                AppendLine(m_Accumulator, 1, "{");
                 string[] splits = scheduledBlock.Code.ToString().Split(";");
                 for (int j = 0; j < splits.Length; j++)
                 {
                     string trimmed = splits[j].TrimEnd();
                     if (string.IsNullOrEmpty(trimmed)) continue;
-                    m_Accumulator.Append("    ");
-                    m_Accumulator.Append(trimmed);
-                    m_Accumulator.Append(";\n");
+                    AppendLine(m_Accumulator, 2, trimmed + ';');
                 }
-                m_Accumulator.Append($"    ctx.SetBlockExecuted({i});\n");
+                AppendLine(m_Accumulator, 2, $"ctx.SetBlockExecuted({i});");
+                AppendLine(m_Accumulator, 1, "}");
+                AppendLine(m_Accumulator, 1, $"if (ctx.HaveBlockSignalsFired({i}))");
+                AppendLine(m_Accumulator, 1, "{");
                 foreach (string exitFlag in scheduledBlock.ExitFlags)
                 {
-                    m_Accumulator.Append(
-                        $"    ctx.SetFlag((int){Constants.ROUTINE_FLAG_ENUM}.{exitFlag});\n");
+                    AppendLine(m_Accumulator, 2,
+                        $"ctx.SetFlag((int){EditorConstants.ROUTINE_FLAG_ENUM}.{exitFlag});");
                 }
+                AppendLine(m_Accumulator, 1, "}");
 
                 // Execution code end
-                m_Accumulator.Append("}\n");
+                AppendLine(m_Accumulator, 0, "}");
             }
         }
         #endregion
@@ -272,12 +276,12 @@ namespace GameScript
                     case CSharpRoutineParser.SIGNAL:
                         EnsureNotCondition("@sig is not allowed in conditions");
                         int currentBlock = m_ScheduledBlocks.Count - 1;
-                        m_ScheduledBlocks[^1].Code.Append(
-                            $"ctx.AcquireSignal({currentBlock})");
+                        AppendNoLine(
+                            m_ScheduledBlocks[^1].Code, 0, $"ctx.AcquireSignal({currentBlock})");
                         break;
                     case CSharpRoutineParser.NODE:
                         EnsureNotCondition("@node is not allowed in conditions");
-                        m_ScheduledBlocks[^1].Code.Append("ctx.GetCurrentNode()");
+                        AppendNoLine(m_ScheduledBlocks[^1].Code, 0, "ctx.GetCurrentNode()");
                         break;
                     default:
                         Walk(child);

@@ -8,8 +8,15 @@ public class Menus : MonoBehaviour
 {
     // TODO - this belongs somewhere else
     private static string sqliteDatabasePath = "C:\\Users\\emful\\Desktop\\DATABASE\\EXPORT_DATA\\HELPER_DB___DO_NOT_SHIP.db";
-    private static string codeOutputDirectory = Path.Combine(Application.dataPath, "Routines");
+    private static string flagOutputDirectory = Path.Combine(Application.dataPath, "Plugins", "GameScript", "Runtime", "Generated");
+    private static string routineOutputDirectory = Path.Combine(Application.dataPath, "Routines");
     private static string dbCodeOutputDirectory = Path.Combine(Application.dataPath, "Plugins", "GameScript", "Editor", "Generated", "SQLite");
+
+    [MenuItem("GameScript/Show Settings")]
+    static void ShowSettings()
+    {
+        Selection.activeObject = Settings.Instance;
+    }
 
     [MenuItem("GameScript/Build All Routines", true)]
     static bool ValidateBuildAllRoutines()
@@ -21,7 +28,7 @@ public class Menus : MonoBehaviour
             // throw new System.Exception($"Could not find SQLite at {sqliteDatabasePath}");
             return false;
         }
-        if (!Directory.Exists(codeOutputDirectory))
+        if (!Directory.Exists(routineOutputDirectory))
         {
             // throw new System.Exception($"Could not find output directory at {codeOutputDirectory}");
             return false;
@@ -32,7 +39,7 @@ public class Menus : MonoBehaviour
     [MenuItem("GameScript/Build All Routines")]
     static void BuildAllRoutines()
     {
-        Transpiler.Transpile(sqliteDatabasePath, codeOutputDirectory);
+        Transpiler.Transpile(sqliteDatabasePath, routineOutputDirectory, flagOutputDirectory);
     }
 
     [MenuItem("GameScript/Import Database", true)]

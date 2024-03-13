@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Mono.Data.Sqlite;
 using UnityEditor;
 using UnityEngine;
-using static Database;
+using static GameScript.StringWriter;
 
 namespace GameScript
 {
@@ -33,11 +33,40 @@ namespace GameScript
 
     public static class DatabaseImporter
     {
+        #region Variables
+        public static bool IsImporting { get; private set; } = false;
+        #endregion
+
+        #region API
+        public static bool CanImport(string sqliteDatabasePath)
+        {
+            string version = GetDatabaseVersion(sqliteDatabasePath);
+            uint exportNumber = GetDatabaseExportNumber(sqliteDatabasePath);
+
+            // disable select database whilst importing
+
+
+
+        }
+
+        public static string GetDatabaseVersion(string sqliteDatabasePath)
+        {
+
+        }
+
+        public static uint GetDatabaseExportNumber(string sqliteDatabasePath)
+        {
+
+        }
+
         public static async void ImportDatabase(string sqliteDatabasePath, string outputDirectory)
         {
+            IsImporting = true;
             await Task.Run(() => ImportDatabaseAsync(sqliteDatabasePath, outputDirectory));
             AssetDatabase.Refresh();
+            IsImporting = false;
         }
+        #endregion
 
         static void ImportDatabaseAsync(string sqliteDatabasePath, string outputDirectory)
         {
@@ -45,7 +74,7 @@ namespace GameScript
             try
             {
                 // Start Progress
-                progressId = Progress.Start($"Importing {Constants.APP_NAME} database");
+                progressId = Progress.Start($"Importing {RuntimeConstants.APP_NAME} database");
 
                 // Delete old files
                 if (Directory.Exists(outputDirectory)) Directory.Delete(outputDirectory, true);
@@ -126,7 +155,7 @@ namespace GameScript
                                 }
                             }
                         }
-                        if (tableName == Constants.ROUTINE_TYPES_TABLE_NAME)
+                        if (tableName == EditorConstants.ROUTINE_TYPES_TABLE_NAME)
                         {
                             foundRoutineTypes = true;
                             List<RoutineTypeData> routineTypes = new();
@@ -134,7 +163,7 @@ namespace GameScript
                             {
                                 command.CommandType = CommandType.Text;
                                 command.CommandText = $"SELECT id, name "
-                                    + $"FROM {Constants.ROUTINE_TYPES_TABLE_NAME};"
+                                    + $"FROM {EditorConstants.ROUTINE_TYPES_TABLE_NAME};"
                                     ;
                                 using (SqliteDataReader reader = command.ExecuteReader())
                                 {
@@ -178,9 +207,9 @@ namespace GameScript
             using (StreamWriter writer = new StreamWriter(
                 Path.Combine(outputDirectory, "RoutineType.cs")))
             {
-                WriteLine(writer, 0, $"// {Constants.GENERATED_CODE_WARNING}");
+                WriteLine(writer, 0, $"// {EditorConstants.GENERATED_CODE_WARNING}");
                 WriteLine(writer, 0, "");
-                WriteLine(writer, 0, $"namespace {Constants.APP_NAME}");
+                WriteLine(writer, 0, $"namespace {RuntimeConstants.APP_NAME}");
                 WriteLine(writer, 0, "{");
                 WriteLine(writer, 1, $"public enum RoutineType");
                 WriteLine(writer, 1, "{");
@@ -209,7 +238,7 @@ namespace GameScript
                     WriteLine(writer, 0, "using System;");
                     WriteLine(writer, 0, "using Mono.Data.Sqlite;");
                     WriteLine(writer, 0, "");
-                    WriteLine(writer, 0, $"namespace {Constants.APP_NAME}");
+                    WriteLine(writer, 0, $"namespace {RuntimeConstants.APP_NAME}");
                     WriteLine(writer, 0, "{");
                     WriteLine(writer, 1, $"public class {friendlyTableName}");
                     WriteLine(writer, 1, "{");
