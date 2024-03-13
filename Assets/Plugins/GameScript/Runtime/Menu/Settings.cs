@@ -10,7 +10,7 @@ namespace GameScript
     {
         #region Constants
         private static readonly string k_SettingsAsset
-            = RuntimeConstants.SETTINGS_OBJECT_NAME + ".asset";
+            = RuntimeConstants.k_SettingsAssetName + ".asset";
         private static readonly string k_SettingsAssetPath = Path.Combine(
             "Assets", "Plugins", "GameScript", "Runtime", "Resources", k_SettingsAsset);
         #endregion
@@ -23,14 +23,14 @@ namespace GameScript
             {
                 if (m_Instance == null)
                 {
-                    m_Instance = Resources.Load(k_SettingsAsset) as Settings;
+                    m_Instance = Resources.Load(RuntimeConstants.k_SettingsAssetName) as Settings;
                     if (m_Instance == null)
                     {
 #if UNITY_EDITOR
                         Settings asset = CreateInstance<Settings>();
                         // Set default values
-                        asset.Version = RuntimeConstants.VERSION;
-                        asset.MaxConversations = 16;
+                        asset.InitialConversationPool = 1;
+                        asset.ConversationDataPath = RuntimeConstants.k_DefaultStreamingAssetsPath;
                         AssetDatabase.CreateAsset(asset, k_SettingsAssetPath);
                         AssetDatabase.SaveAssets();
                         m_Instance = asset;
@@ -47,14 +47,14 @@ namespace GameScript
 
         #region Runtime Settings 
         public uint MaxFlags;
-        public uint MaxSignals;
-        public uint MaxConversations;
-        public uint MaxScheduledBlocks;
+        public uint InitialConversationPool;
         #endregion
 
         #region Editor Settings
-        public string Version;
         public string DatabasePath;
+        public string DatabaseVersion;
+        public string RoutinePath;
+        public string ConversationDataPath;
         #endregion
     }
 }

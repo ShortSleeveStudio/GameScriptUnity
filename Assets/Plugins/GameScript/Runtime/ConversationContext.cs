@@ -1,5 +1,5 @@
 using System;
-using UnityEngine;
+using System.Collections.Generic;
 
 namespace GameScript
 {
@@ -11,8 +11,7 @@ namespace GameScript
 
         public ConversationContext(Settings settings)
         {
-            m_RoutineState
-                = new(settings.MaxScheduledBlocks, settings.MaxSignals, settings.MaxFlags);
+            m_RoutineState = new(settings.MaxFlags);
         }
 
         #region Conversation
@@ -51,16 +50,17 @@ namespace GameScript
         #region Helper Classes
         class RoutineState
         {
+            private const int k_InitialBlockPool = 8; // Conservative guess
             private int m_BlocksInUse;
-            private ScheduledBlock[] m_Blocks;
+            private List<ScheduledBlock> m_Blocks;
             private bool[] m_FlagState;
             private bool m_IsCondition;
             private bool m_ConditionResult;
 
-            public RoutineState(uint maxScheduledBlocks, uint maxSignals, uint maxFlags)
+            public RoutineState(uint maxFlags)
             {
-                m_Blocks = new ScheduledBlock[maxScheduledBlocks];
-                for (uint i = 0; i < maxScheduledBlocks; i++) m_Blocks[i] = new(maxSignals);
+                m_Blocks = new(k_InitialBlockPool);
+                EnsurePoolSize(k_InitialBlockPool);
                 m_BlocksInUse = 0;
                 m_FlagState = new bool[maxFlags];
                 m_IsCondition = false;
@@ -78,7 +78,11 @@ namespace GameScript
                 return true;
             }
 
-            public void SetBlocksInUse(int blockCount) => m_BlocksInUse = blockCount;
+            public void SetBlocksInUse(int blockCount)
+            {
+                m_BlocksInUse = blockCount;
+                EnsurePoolSize(m_BlocksInUse);
+            }
             public bool IsBlockExecuted(int blockIndex) => m_Blocks[blockIndex].HasExecuted();
             public void SetBlockExecuted(int blockIndex) => m_Blocks[blockIndex].SetExecuted();
             public Signal AcquireSignal(int blockIndex) => m_Blocks[blockIndex].AcquireSignal();
@@ -94,6 +98,7 @@ namespace GameScript
                 }
                 return m_ConditionResult;
             }
+
             public void SetConditionResult(bool result)
             {
                 m_IsCondition = true;
@@ -111,39 +116,45 @@ namespace GameScript
                 for (int i = 0; i < m_BlocksInUse; i++) m_Blocks[i].Reset();
                 for (int i = 0; i < m_FlagState.Length; i++) m_FlagState[i] = false;
             }
+
+            private void EnsurePoolSize(int poolSize)
+            {
+                for (int i = m_Blocks.Count; i < poolSize; i++) m_Blocks.Add(new());
+            }
         }
 
         class ScheduledBlock
         {
-            private Signal[] m_Signals;
-            private bool[] m_SignalState;
+            private const int k_InitialSignalPool = 8; // Conservative guess
+            private List<SignalData> m_Signals;
             private int m_CurrentSignal;
             private bool m_Executed;
 
-            public ScheduledBlock(uint maxSignals)
+            public ScheduledBlock()
             {
-                m_Signals = new Signal[maxSignals];
-                m_Executed = false;
-                m_SignalState = new bool[maxSignals];
-                m_CurrentSignal = 0;
-                for (uint i = 0; i < maxSignals; i++)
-                {
-                    // Capture variable
-                    uint index = i;
-                    m_Signals[i] = () => m_SignalState[index] = true;
-                }
-            }
+                m_Signals = new(k_InitialSignalPool);
+                EnsurePoolSize(k_InitialSignalPool);
 
-            public Signal AcquireSignal() => m_Signals[m_CurrentSignal++];
+                m_Executed = false;
+                m_CurrentSignal = 0;
+
+            }
 
             public bool HasExecuted() => m_Executed;
             public void SetExecuted() => m_Executed = true;
+
+            public Signal AcquireSignal()
+            {
+                int currentSignal = m_CurrentSignal++;
+                EnsurePoolSize(m_CurrentSignal);
+                return m_Signals[currentSignal].Signal;
+            }
 
             public bool HaveAllSignalsFired()
             {
                 for (int i = 0; i < m_CurrentSignal; i++)
                 {
-                    if (!m_SignalState[i]) return false;
+                    if (!m_Signals[i].Triggered) return false;
                 }
                 return true;
             }
@@ -152,7 +163,27 @@ namespace GameScript
             {
                 m_Executed = false;
                 m_CurrentSignal = 0;
-                for (int i = 0; i < m_SignalState.Length; i++) m_SignalState[i] = false;
+                for (int i = 0; i < m_Signals.Count; i++) m_Signals[i].Triggered = false;
+            }
+
+            private void EnsurePoolSize(int poolSize)
+            {
+                for (int i = m_Signals.Count; i < poolSize; i++)
+                {
+                    // Capture
+                    int index = i;
+                    m_Signals.Add(new()
+                    {
+                        Signal = () => m_Signals[index].Triggered = true,
+                        Triggered = false,
+                    });
+                }
+            }
+
+            private class SignalData
+            {
+                public Signal Signal;
+                public bool Triggered;
             }
         }
         #endregion

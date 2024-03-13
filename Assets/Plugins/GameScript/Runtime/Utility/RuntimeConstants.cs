@@ -1,10 +1,14 @@
+using UnityEngine;
+
 namespace GameScript
 {
     public static class RuntimeConstants
     {
-        public const string APP_NAME = "GameScript";
-        public const string VERSION = "0.0.0";
-        public static readonly string SETTINGS_OBJECT_NAME = $"{APP_NAME}Settings";
+        public const string k_AppName = "GameScript";
+        public const string k_Version = "0.0.0";
+        public static readonly string k_SettingsAssetName = $"{k_AppName}Settings";
+        public static readonly string k_DefaultStreamingAssetsPath
+            = Application.streamingAssetsPath + "/" + k_AppName;
     }
 }
 

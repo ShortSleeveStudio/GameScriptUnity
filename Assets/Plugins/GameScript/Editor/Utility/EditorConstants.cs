@@ -2,13 +2,13 @@ namespace GameScript
 {
     public static class EditorConstants
     {
-        public const string ROUTINE_TYPES_TABLE_NAME = "routine_types";
-        public const string GENERATED_CODE_WARNING = "GENERATED CODE - DO NOT EDIT BY HAND";
-        public const string CONVERSATION_CONTEXT_CLASS = "ConversationContext";
-        public const string ROUTINE_DIRECTORY_CLASS = "RoutineDirectory";
-        public const string ROUTINE_INITIALIZER_CLASS = "RoutineInitializer";
-        public const string ROUTINE_FLAG_ENUM = "RoutineFlag";
-        public const int SQL_BATCH_SIZE = 500;
+        public const int k_SqlBackSize = 500;
+        public const string k_RoutineTypesTableName = "routine_types";
+        public const string k_GeneratedCodeWarning = "GENERATED CODE - DO NOT EDIT BY HAND";
+        public const string k_ConversationContextClass = "ConversationContext";
+        public const string k_RoutineDirectoryClass = "RoutineDirectory";
+        public const string k_RoutineInitializerClass = "RoutineInitializer";
+        public const string k_RoutineFlagEnum = "RoutineFlag";
     }
 }
 

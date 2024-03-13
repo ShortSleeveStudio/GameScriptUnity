@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using static GameScript.StringWriter;
 
@@ -24,13 +25,37 @@ namespace GameScript
             m_Routine = routine;
         }
 
-        public static string Transpile(
-            IParseTree tree, HashSet<string> flagCache,
-            Routines routine)
+        public static string Transpile(Routines routine, HashSet<string> flagCache)
         {
-            TranspilingTreeWalker walker = new(flagCache, routine);
-            walker.WalkEntry(tree);
-            return walker.ToString();
+            // Create parser
+            TranspileErrorListener errorListener = new();
+            ICharStream stream = CharStreams.fromString(routine.code.Trim());
+            CSharpRoutineLexer lexer = new CSharpRoutineLexer(stream);
+            ITokenStream tokens = new CommonTokenStream(lexer);
+            CSharpRoutineParser parser = new(tokens)
+            {
+                BuildParseTree = true,
+            };
+            lexer.RemoveErrorListeners();
+            parser.RemoveErrorListeners();
+            parser.AddErrorListener(errorListener);
+
+            // Transpile
+            try
+            {
+                IParseTree tree = routine.isCondition ? parser.expression() : parser.routine();
+                TranspilingTreeWalker walker = new(flagCache, routine);
+                walker.WalkEntry(tree);
+                return walker.ToString();
+            }
+            catch (Exception)
+            {
+                string message = $"Transpilation error in routine {routine.id} at "
+                    + $"line: {errorListener.ErrorLine} "
+                    + $"column: {errorListener.ErrorColumn} "
+                    + $"message: {errorListener.ErrorMessage}";
+                throw new Exception(message);
+            }
         }
 
         public override string ToString() => m_Accumulator.ToString();
@@ -163,7 +188,7 @@ namespace GameScript
                         if (first) first = false;
                         else AppendNoLine(m_Accumulator, 0, " && ");
                         AppendNoLine(m_Accumulator, 0, "ctx.IsFlagSet((int)"
-                            + $"{EditorConstants.ROUTINE_FLAG_ENUM}.{entryFlag})");
+                            + $"{EditorConstants.k_RoutineFlagEnum}.{entryFlag})");
                     }
                     AppendLine(m_Accumulator, 0, ")");
                 }
@@ -188,7 +213,7 @@ namespace GameScript
                 foreach (string exitFlag in scheduledBlock.ExitFlags)
                 {
                     AppendLine(m_Accumulator, 2,
-                        $"ctx.SetFlag((int){EditorConstants.ROUTINE_FLAG_ENUM}.{exitFlag});");
+                        $"ctx.SetFlag((int){EditorConstants.k_RoutineFlagEnum}.{exitFlag});");
                 }
                 AppendLine(m_Accumulator, 1, "}");
 
@@ -276,8 +301,8 @@ namespace GameScript
                     case CSharpRoutineParser.SIGNAL:
                         EnsureNotCondition("@sig is not allowed in conditions");
                         int currentBlock = m_ScheduledBlocks.Count - 1;
-                        AppendNoLine(
-                            m_ScheduledBlocks[^1].Code, 0, $"ctx.AcquireSignal({currentBlock})");
+                        ScheduledBlockBuilder block = m_ScheduledBlocks[currentBlock];
+                        AppendNoLine(block.Code, 0, $"ctx.AcquireSignal({currentBlock})");
                         break;
                     case CSharpRoutineParser.NODE:
                         EnsureNotCondition("@node is not allowed in conditions");
@@ -308,21 +333,13 @@ namespace GameScript
         }
         #endregion
 
-        #region Helpers - Scheduled Blocks
+        #region Helper - Classes/Structs 
         private class ScheduledBlockBuilder
         {
-            public int SignalCount { get; private set; }
             public int ScheduledBlockID { get; private set; }
             public HashSet<string> ExitFlags { get; }
             public HashSet<string> EntryFlags { get; }
             public StringBuilder Code { get; }
-
-            public int GetThenIncrementSignalCount()
-            {
-                int count = SignalCount;
-                SignalCount++;
-                return count;
-            }
 
             public ScheduledBlockBuilder(int blockId)
             {

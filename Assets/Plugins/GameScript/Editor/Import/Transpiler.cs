@@ -1,37 +1,27 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Threading.Tasks;
 using Mono.Data.Sqlite;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
 using static GameScript.StringWriter;
 using static GameScript.Database;
-using Antlr4.Runtime;
-using Antlr4.Runtime.Tree;
 
 namespace GameScript
 {
     public class Transpiler
     {
-
-        public static async void Transpile(
-            string sqliteDatabasePath, string routineOutputDirectory, string flagOutputDirectory)
-        {
-            await Task.Run(()
-                => TranspileAsync(sqliteDatabasePath, routineOutputDirectory, flagOutputDirectory));
-            AssetDatabase.Refresh();
-        }
-
+        #region API
         /**
          * This will build an array of Action's that will be looked up by index. The final index
          * contains the "noop" Action used for all empty/null routines.
          */
-        static void TranspileAsync(
+        public static TranspilerResult Transpile(
             string sqliteDatabasePath, string routineOutputDirectory, string flagOutputDirectory)
         {
             // Create flag cache
+            TranspilerResult transpilerResult = new TranspilerResult();
             HashSet<string> flagCache = new();
             string importString = "";
 
@@ -89,17 +79,17 @@ namespace GameScript
 
                     // Fetch all routines
                     string path = Path.Combine(
-                        routineOutputDirectory, $"{EditorConstants.ROUTINE_INITIALIZER_CLASS}.cs");
+                        routineOutputDirectory, $"{EditorConstants.k_RoutineInitializerClass}.cs");
                     using (StreamWriter writer = new StreamWriter(path))
                     {
                         writer.NewLine = "\n";
-                        WriteLine(writer, 0, $"// {EditorConstants.GENERATED_CODE_WARNING}");
+                        WriteLine(writer, 0, $"// {EditorConstants.k_GeneratedCodeWarning}");
                         WriteLine(writer, 0, importString);
                         WriteLine(writer, 0, "");
-                        WriteLine(writer, 0, $"namespace {RuntimeConstants.APP_NAME}");
+                        WriteLine(writer, 0, $"namespace {RuntimeConstants.k_AppName}");
                         WriteLine(writer, 0, "{");
                         WriteLine(writer, 1,
-                            $"public static class {EditorConstants.ROUTINE_INITIALIZER_CLASS}");
+                            $"public static class {EditorConstants.k_RoutineInitializerClass}");
                         WriteLine(writer, 1, "{");
                         WriteLine(writer, 2, "[UnityEngine.RuntimeInitializeOnLoadMethod("
                             + "UnityEngine.RuntimeInitializeLoadType.BeforeSplashScreen)]");
@@ -111,11 +101,11 @@ namespace GameScript
 
                         // Write Routines
                         int currentIndex = 0;
-                        for (int i = 0; i < routineCount; i += EditorConstants.SQL_BATCH_SIZE)
+                        for (int i = 0; i < routineCount; i += EditorConstants.k_SqlBackSize)
                         {
                             Progress.Report(
                                 progressId, (float)i / routineCount, "Transpiling routines");
-                            int limit = EditorConstants.SQL_BATCH_SIZE;
+                            int limit = EditorConstants.k_SqlBackSize;
                             int offset = i;
                             string query = $"SELECT * FROM {Routines.TABLE_NAME} "
                                 + $"{routineWhereClause} "
@@ -181,32 +171,23 @@ namespace GameScript
             {
                 Progress.Remove(progressId);
             }
-        }
 
+            // Return transpile result
+            transpilerResult.MaxFlags = (uint)flagCache.Count;
+            return transpilerResult;
+        }
+        #endregion
+
+        #region Helpers
         static void WriteRoutine(
-            Routines routine, StreamWriter writer, HashSet<string> flagCache,
-            int methodIndex)
+            Routines routine, StreamWriter writer, HashSet<string> flagCache, int methodIndex)
         {
             WriteLine(writer, 3,
                 $"RoutineDirectory.Directory[{methodIndex}] = (ConversationContext ctx) =>");
             WriteLine(writer, 3, "{");
-
-            // Create parser
-            TranspileErrorListener errorListener = new();
-            ICharStream stream = CharStreams.fromString(routine.code.Trim());
-            CSharpRoutineLexer lexer = new CSharpRoutineLexer(stream);
-            ITokenStream tokens = new CommonTokenStream(lexer);
-            CSharpRoutineParser parser = new(tokens)
-            {
-                BuildParseTree = true,
-            };
-            lexer.RemoveErrorListeners();
-            parser.RemoveErrorListeners();
-            parser.AddErrorListener(errorListener);
             try
             {
-                IParseTree tree = routine.isCondition ? parser.expression() : parser.routine();
-                string generatedCode = TranspilingTreeWalker.Transpile(tree, flagCache, routine);
+                string generatedCode = TranspilingTreeWalker.Transpile(routine, flagCache);
                 if (generatedCode.Length > 0)
                 {
                     string[] lines = generatedCode.Split("\n");
@@ -219,10 +200,6 @@ namespace GameScript
             catch (Exception e)
             {
                 WriteLine(writer, 3, $"    /* Error in routine: {routine.id} */");
-                Debug.LogError($"Transpilation error in routine {routine.id} at "
-                    + $"line: {errorListener.ErrorLine} "
-                    + $"column: {errorListener.ErrorColumn} "
-                    + $"message: {errorListener.ErrorMessage}");
                 Debug.LogException(e);
             }
             WriteLine(writer, 3, "};");
@@ -230,16 +207,16 @@ namespace GameScript
 
         static void WriteFlags(string outputDirectory, HashSet<string> flagCache)
         {
-            string path = Path.Combine(outputDirectory, $"{EditorConstants.ROUTINE_FLAG_ENUM}.cs");
+            string path = Path.Combine(outputDirectory, $"{EditorConstants.k_RoutineFlagEnum}.cs");
             if (File.Exists(path)) File.Delete(path);
             using (StreamWriter writer = new StreamWriter(path))
             {
                 writer.NewLine = "\n";
-                WriteLine(writer, 0, $"// {EditorConstants.GENERATED_CODE_WARNING}");
+                WriteLine(writer, 0, $"// {EditorConstants.k_GeneratedCodeWarning}");
                 WriteLine(writer, 0, "");
-                WriteLine(writer, 0, $"namespace {RuntimeConstants.APP_NAME}");
+                WriteLine(writer, 0, $"namespace {RuntimeConstants.k_AppName}");
                 WriteLine(writer, 0, "{");
-                WriteLine(writer, 1, $"public enum {EditorConstants.ROUTINE_FLAG_ENUM}");
+                WriteLine(writer, 1, $"public enum {EditorConstants.k_RoutineFlagEnum}");
                 WriteLine(writer, 1, "{");
                 foreach (string flag in flagCache)
                 {
@@ -249,5 +226,6 @@ namespace GameScript
                 WriteLine(writer, 0, "}"); // namespace
             }
         }
+        #endregion
     }
 }

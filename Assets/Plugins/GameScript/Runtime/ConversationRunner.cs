@@ -23,13 +23,10 @@ namespace GameScript
         void Awake()
         {
             // Initialize state
-            m_Settings = Resources.Load<Settings>(RuntimeConstants.SETTINGS_OBJECT_NAME);
+            m_Settings = Resources.Load<Settings>(RuntimeConstants.k_SettingsAssetName);
             m_ContextsActive = new();
             m_ContextsInactive = new();
-            for (uint i = 0; i < m_Settings.MaxConversations; i++)
-            {
-                m_ContextsInactive.AddLast(new ConversationContext(m_Settings));
-            }
+            EnsurePoolSize((int)m_Settings.InitialConversationPool);
 
             // TODO - TEMPORARY, DELETE THIS
             // tmp = new ConversationContext(m_Settings);
@@ -45,6 +42,16 @@ namespace GameScript
             //     test(tmp);
             //     if (tmp.IsRoutineExecuted()) tmp = null;
             // }
+        }
+        #endregion
+
+        #region Helpers
+        private void EnsurePoolSize(int poolSize)
+        {
+            for (int i = m_ContextsInactive.Count; i < poolSize; i++)
+            {
+                m_ContextsInactive.AddLast(new ConversationContext(m_Settings));
+            }
         }
         #endregion
     }
