@@ -12,7 +12,7 @@ namespace GameScript
         public long parent;
         public long priority;
         public string notes;
-        public long type;
+        public string type;
         public long source;
         public long target;
 
@@ -36,8 +36,8 @@ namespace GameScript
                 : reader.GetString(3)
                 ;
             obj.type = reader.GetValue(4) is DBNull
-                ? 0
-                : reader.GetInt64(4)
+                ? ""
+                : reader.GetString(4)
                 ;
             obj.source = reader.GetValue(5) is DBNull
                 ? 0

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Threading.Tasks;
@@ -54,18 +55,26 @@ namespace GameScript
             try
             {
                 IsImporting = true;
-                TranspilerResult result = new();
+                DbCodeGeneratorResult codeGenResult = default;
+                TranspilerResult transpilerResult = default;
+                ConversationDataGeneratorResult conversationResult = default;
                 await Task.Run(() =>
                 {
-                    DatabaseCodeGenerator.GenerateDatabaseCode(sqliteDatabasePath, dbCodeDirectory);
-                    result = Transpiler.Transpile(
+                    codeGenResult = DatabaseCodeGenerator.GenerateDatabaseCode(
+                        sqliteDatabasePath, dbCodeDirectory);
+                    if (codeGenResult.WasError) return;
+                    transpilerResult = Transpiler.Transpile(
                         sqliteDatabasePath, routineOutputDirectory, flagOutputDirectory);
-                    ConversationDataGenerator.GenerateConversationData(sqliteDatabasePath,
-                        conversationOutputDirectory, result.RoutineIdToIndex, result.NoopRoutineId);
+                    if (transpilerResult.WasError) return;
+                    conversationResult = ConversationDataGenerator.GenerateConversationData(
+                        sqliteDatabasePath, conversationOutputDirectory,
+                        transpilerResult.RoutineIdToIndex);
                 });
+                if (codeGenResult.WasError
+                    || transpilerResult.WasError || conversationResult.WasError) return;
 
                 // Update Settings
-                Settings.Instance.MaxFlags = result.MaxFlags;
+                Settings.Instance.MaxFlags = transpilerResult.MaxFlags;
 
                 // Refresh Database
                 // AssetDatabase.Refresh();

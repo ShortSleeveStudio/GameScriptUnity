@@ -5,14 +5,16 @@ using System.IO;
 using System.Linq;
 using Mono.Data.Sqlite;
 using UnityEditor;
+using UnityEngine;
 using static GameScript.StringWriter;
 namespace GameScript
 {
     public static class DatabaseCodeGenerator
     {
-        public static void GenerateDatabaseCode(string sqliteDatabasePath, string dbCodeDirectory)
+        public static DbCodeGeneratorResult GenerateDatabaseCode(string sqliteDatabasePath, string dbCodeDirectory)
         {
             int progressId = 0;
+            DbCodeGeneratorResult result = new();
             try
             {
                 // Start Progress
@@ -67,8 +69,7 @@ namespace GameScript
                                 {
                                     // Column name
                                     string columnName = reader.GetString(1);
-                                    bool startsWithIs = columnName.StartsWith("is"); // it's a bool
-                                                                                     // Column type
+                                    bool startsWithIs = columnName.StartsWith("is");
                                     string columnType = reader.GetString(2);
                                     DatabaseType type;
                                     switch (columnType)
@@ -134,10 +135,16 @@ namespace GameScript
                 GenerateTypes(tableToColumns, dbCodeDirectory);
                 Progress.Report(progressId, 1f, "Done");
             }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                result.WasError = true;
+            }
             finally
             {
                 Progress.Remove(progressId);
             }
+            return result;
         }
 
         static void GenerateRoutineTypes(List<RoutineTypeData> routineTypes, string dbCodeDirectory)

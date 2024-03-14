@@ -9,10 +9,8 @@ namespace GameScript
         public uint actor;
         public DiskLocalization uiResponseText;
         public DiskLocalization voiceText;
-        // IDs are remapped to be sequential
-        public uint condition;
-        // IDs are remapped to be sequential
-        public uint code;
+        public uint condition; // Index into routine array
+        public uint code; // Index into routine array
         public bool isPreventResponse;
         public bool isRoot;
     }

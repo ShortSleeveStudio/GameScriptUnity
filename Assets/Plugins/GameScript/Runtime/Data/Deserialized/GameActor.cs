@@ -1,6 +1,8 @@
 namespace GameScript
 {
-    public class ConversationNode
+    public class GameActor
     {
+
     }
 }
+

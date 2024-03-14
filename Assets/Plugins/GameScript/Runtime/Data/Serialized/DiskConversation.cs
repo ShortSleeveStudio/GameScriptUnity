@@ -7,7 +7,7 @@ namespace GameScript
     {
         public uint id;
         public string name;
-        public DiskNode[] diskNodes;
-        public DiskEdge[] diskEdges;
+        public DiskNode[] nodes;
+        public DiskEdge[] edges;
     }
 }

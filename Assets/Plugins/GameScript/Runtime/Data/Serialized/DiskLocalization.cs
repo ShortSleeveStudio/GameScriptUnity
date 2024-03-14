@@ -6,7 +6,6 @@ namespace GameScript
     public class DiskLocalization
     {
         public uint id;
-        // Lookup using the index field added to locales
-        public string[] localizations;
+        public string[] localizations; // Lookup with locale.index
     }
 }

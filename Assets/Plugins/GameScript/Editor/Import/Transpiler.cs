@@ -25,6 +25,7 @@ namespace GameScript
             HashSet<string> flagCache = new();
             Dictionary<uint, uint> routineIdToIndex = new();
             string importString = "";
+            string routinePath = null;
 
             int progressId = 0;
             try
@@ -41,7 +42,6 @@ namespace GameScript
                     // Fetch imports
                     using (SqliteCommand command = connection.CreateCommand())
                     {
-                        // Get routine count
                         command.CommandType = CommandType.Text;
                         command.CommandText = $"SELECT * FROM {Routines.TABLE_NAME} "
                             + $"WHERE type = '{(int)RoutineType.Import}';";
@@ -68,7 +68,6 @@ namespace GameScript
                         + $"AND type != '{RoutineType.Import}'";
                     using (SqliteCommand command = connection.CreateCommand())
                     {
-                        // Get routine count
                         command.CommandType = CommandType.Text;
                         command.CommandText = $"SELECT COUNT(*) as count "
                             + $"FROM {Routines.TABLE_NAME} {routineWhereClause};";
@@ -79,9 +78,9 @@ namespace GameScript
                     }
 
                     // Fetch all routines
-                    string path = Path.Combine(
+                    routinePath = Path.Combine(
                         routineOutputDirectory, $"{EditorConstants.k_RoutineInitializerClass}.cs");
-                    using (StreamWriter writer = new StreamWriter(path))
+                    using (StreamWriter writer = new StreamWriter(routinePath))
                     {
                         writer.NewLine = "\n";
                         WriteLine(writer, 0, $"// {EditorConstants.k_GeneratedCodeWarning}");
@@ -113,7 +112,6 @@ namespace GameScript
                                 + $"ORDER BY id ASC LIMIT {limit} OFFSET {offset};";
                             using (SqliteCommand command = connection.CreateCommand())
                             {
-                                // Get routine count
                                 uint j = 0;
                                 command.CommandType = CommandType.Text;
                                 command.CommandText = query;
@@ -121,7 +119,7 @@ namespace GameScript
                                 {
                                     while (reader.Read())
                                     {
-                                        // Grab routine
+                                        // Grab row
                                         Routines routine = Routines.FromReader(reader);
 
                                         // Transpile code
@@ -136,8 +134,11 @@ namespace GameScript
                                                     routineIdToIndex);
                                                 break;
                                             case (int)RoutineType.Import:
-                                                // We'll use the import routine as the noop routine
-                                                transpilerResult.NoopRoutineId = (uint)routine.id;
+                                                if (routine.id != 1)
+                                                {
+                                                    throw new Exception(
+                                                        "Import routine id was not 0 as expected");
+                                                }
                                                 WriteRoutine(
                                                     new() { id = routine.id, code = "" }, writer,
                                                     flagCache, currentIndex, routineIdToIndex);
@@ -167,6 +168,11 @@ namespace GameScript
             catch (Exception e)
             {
                 Debug.LogException(e);
+                if (!string.IsNullOrEmpty(routinePath) && File.Exists(routinePath))
+                {
+                    File.Delete(routinePath);
+                }
+                transpilerResult.WasError = true;
             }
             finally
             {
