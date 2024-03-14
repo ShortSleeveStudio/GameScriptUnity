@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using Mono.Data.Sqlite;
@@ -32,7 +33,7 @@ namespace GameScript
                     conversationDataPath, RuntimeConstants.k_ConversationDataFilename);
 
                 // Create the data
-                Disk toSerialize = CreateSerializedData(
+                GameData toSerialize = CreateSerializedData(
                     progressId, dbPath, routineIdToIndex);
 
                 // Write to disk
@@ -40,7 +41,10 @@ namespace GameScript
                 BinaryFormatter serializer = new();
                 using (FileStream fs = new(path, FileMode.Create))
                 {
-                    serializer.Serialize(fs, toSerialize);
+                    using (GZipStream zipStream = new(fs, CompressionMode.Compress))
+                    {
+                        serializer.Serialize(zipStream, toSerialize);
+                    }
                 }
                 Progress.Report(progressId, 1f, "Done");
             }
@@ -56,14 +60,14 @@ namespace GameScript
             return result;
         }
 
-        static Disk CreateSerializedData(
+        static GameData CreateSerializedData(
             int progressId, string dbPath, Dictionary<uint, uint> routineIdToIndex)
         {
-            Disk disk = new();
+            GameData disk = new();
             using (SqliteConnection connection = new(Database.SqlitePathToURI(dbPath)))
             {
                 connection.Open();
-                Dictionary<uint, DiskLocalization> idToLocalization = new();
+                Dictionary<uint, Localization> idToLocalization = new();
                 Progress.Report(progressId, 0.1f, "Gathering localizations");
                 disk.localizations = SerializeLocalizations(connection, idToLocalization);
                 Progress.Report(progressId, 0.3f, "Gathering locales");
@@ -78,10 +82,10 @@ namespace GameScript
         }
 
         /**We only care about non-system created localizations*/
-        static DiskLocalization[] SerializeLocalizations(
-            SqliteConnection connection, Dictionary<uint, DiskLocalization> idToLocalization)
+        static Localization[] SerializeLocalizations(
+            SqliteConnection connection, Dictionary<uint, Localization> idToLocalization)
         {
-            DiskLocalization[] localizations = null;
+            Localization[] localizations = null;
 
             // Grab locale fields
             List<FieldInfo> localizationFields = new();
@@ -96,7 +100,7 @@ namespace GameScript
             ReadTable(connection, Localizations.TABLE_NAME,
             (uint count) =>
             {
-                localizations = new DiskLocalization[count];
+                localizations = new Localization[count];
             },
             (uint index, SqliteDataReader reader) =>
             {
@@ -111,7 +115,7 @@ namespace GameScript
                 }
 
                 // Create disk localization
-                DiskLocalization diskLocalization = new()
+                Localization diskLocalization = new()
                 {
                     id = (uint)localization.id,
                     localizations = localizationStrings,
@@ -129,14 +133,14 @@ namespace GameScript
             return localizations;
         }
 
-        static DiskLocale[] SerializeLocales(
-            SqliteConnection connection, Dictionary<uint, DiskLocalization> idToLocalization)
+        static Locale[] SerializeLocales(
+            SqliteConnection connection, Dictionary<uint, Localization> idToLocalization)
         {
-            DiskLocale[] locales = null;
+            Locale[] locales = null;
             ReadTable(connection, Locales.TABLE_NAME,
             (uint count) =>
             {
-                locales = new DiskLocale[count];
+                locales = new Locale[count];
             },
             (uint index, SqliteDataReader reader) =>
             {
@@ -152,14 +156,14 @@ namespace GameScript
             return locales;
         }
 
-        static DiskActor[] SerializeActors(
-            SqliteConnection connection, Dictionary<uint, DiskLocalization> idToLocalization)
+        static Actor[] SerializeActors(
+            SqliteConnection connection, Dictionary<uint, Localization> idToLocalization)
         {
-            DiskActor[] actors = null;
+            Actor[] actors = null;
             ReadTable(connection, Actors.TABLE_NAME,
             (uint count) =>
             {
-                actors = new DiskActor[count];
+                actors = new Actor[count];
             },
             (uint index, SqliteDataReader reader) =>
             {
@@ -174,51 +178,58 @@ namespace GameScript
             return actors;
         }
 
-        static DiskConversation[] SerializeConversations(SqliteConnection connection,
-            Dictionary<uint, DiskLocalization> idToLocalization,
+        static Conversation[] SerializeConversations(SqliteConnection connection,
+            Dictionary<uint, Localization> idToLocalization,
             Dictionary<uint, uint> routineIdToIndex)
         {
-            DiskConversation[] conversations = null;
+            // Gather all conversation data
+            Conversation[] conversations = null;
+            Dictionary<uint, Edge> nodeIdToEdgeMissingTarget = new();
+            Dictionary<uint, Node> idToNode = new(); // All nodes in game
             ReadTable(connection, Conversations.TABLE_NAME,
             (uint count) =>
             {
-                conversations = new DiskConversation[count];
+                conversations = new Conversation[count];
             },
             (uint index, SqliteDataReader reader) =>
             {
                 Conversations conversation = Conversations.FromReader(reader);
+                Node root;
                 conversations[index] = new()
                 {
                     id = (uint)conversation.id,
                     name = conversation.name,
                     nodes = FetchNodesForConversation(
-                        connection, (uint)conversation.id, idToLocalization, routineIdToIndex),
-                    edges = FetchEdgesForConversation(connection, (uint)conversation.id),
+                        connection, (uint)conversation.id, idToLocalization, routineIdToIndex,
+                        nodeIdToEdgeMissingTarget, idToNode, out root),
+                    rootNode = root,
                 };
-            });
+            },
+            "WHERE isDeleted = false");
+
+            // Handle all edges that link outside of their conversations
+            foreach (KeyValuePair<uint, Edge> entry in nodeIdToEdgeMissingTarget)
+            {
+                entry.Value.target = idToNode[entry.Key];
+            }
 
             return conversations;
         }
 
-        static DiskNode[] FetchNodesForConversation(SqliteConnection connection,
-            uint conversationId, Dictionary<uint, DiskLocalization> idToLocalization,
-            Dictionary<uint, uint> routineIdToIndex)
+        static Node[] FetchNodesForConversation(SqliteConnection connection,
+            uint conversationId, Dictionary<uint, Localization> idToLocalization,
+            Dictionary<uint, uint> routineIdToIndex,
+            Dictionary<uint, Edge> nodeIdToEdgeMissingTarget,
+            Dictionary<uint, Node> idToNode, out Node rootNode)
         {
-            return FetchConversationChildObjects(
+            // Gather all nodes, populated without edges
+            Dictionary<uint, List<Edge>> nodeIdToOutgoingEdges = new();
+            Node root = null;
+            Node[] nodes = FetchConversationChildObjects(
                 connection, Nodes.TABLE_NAME, conversationId, (SqliteDataReader reader) =>
             {
                 Nodes node = Nodes.FromReader(reader);
 
-                // Note:
-                // Root nodes don't have localizations or code.
-                bool isRoot = node.type == "root";
-                DiskLocalization uiResponseText = null;
-                DiskLocalization voiceText = null;
-                if (!isRoot)
-                {
-                    uiResponseText = idToLocalization[(uint)node.uiResponseText];
-                    voiceText = idToLocalization[(uint)node.voiceText];
-                }
                 // Note: 
                 // If these don't exist in the map, it means they were noop routines. Moreover,
                 // if these were null (for root nodes), they'd default to 0 and not exist in the
@@ -228,38 +239,91 @@ namespace GameScript
                 uint condition = routineIdToIndex.ContainsKey((uint)node.condition)
                     ? routineIdToIndex[(uint)node.condition]
                     : 0;
+                // Handle default routines
+                if (node.codeOverride != 0) node.code = node.codeOverride;
                 uint code = routineIdToIndex.ContainsKey((uint)node.code)
-                    ? routineIdToIndex[(uint)node.code]
-                    : 0;
-                return new DiskNode()
+                      ? routineIdToIndex[(uint)node.code]
+                      : 0;
+                Node diskNode = new Node()
                 {
                     id = (uint)node.id,
                     actor = (uint)node.actor,
-                    uiResponseText = uiResponseText,
-                    voiceText = voiceText,
+
                     condition = condition,
                     code = code,
                     isPreventResponse = node.isPreventResponse,
-                    isRoot = isRoot,
                 };
-            });
-        }
 
-        static DiskEdge[] FetchEdgesForConversation(
-            SqliteConnection connection, uint conversationId)
-        {
-            return FetchConversationChildObjects(
-                connection, Edges.TABLE_NAME, conversationId, (SqliteDataReader reader) =>
+                // Note: Root nodes don't have localizations or code.
+                if (node.type == "root")
+                {
+                    diskNode.uiResponseText = null;
+                    diskNode.voiceText = null;
+                    root = diskNode;
+                }
+                else
+                {
+                    diskNode.uiResponseText = idToLocalization[(uint)node.uiResponseText];
+                    diskNode.voiceText = idToLocalization[(uint)node.voiceText];
+                }
+
+                // Add to node lookup table
+                idToNode.Add(diskNode.id, diskNode);
+                return diskNode;
+            });
+            rootNode = root;
+
+            // Gather edges and populate nodes
+            // Note: because we may eventually wish to link from one conversation to another
+            //       we'll maintain a map of edges that are missing targets.
+            Edge[] edges = FetchConversationChildObjects(connection, Edges.TABLE_NAME,
+                conversationId, (SqliteDataReader reader) =>
             {
                 Edges edge = Edges.FromReader(reader);
-                return new DiskEdge()
+
+                uint sourceId = (uint)edge.source;
+                uint targetId = (uint)edge.target;
+                Edge diskEdge = new Edge()
                 {
                     id = (uint)edge.id,
-                    source = (uint)edge.source,
-                    target = (uint)edge.target,
+                    source = idToNode[sourceId],
                     priority = edge.priority,
                 };
+
+                // Set target node
+                Node targetNode;
+                idToNode.TryGetValue(targetId, out targetNode);
+                if (targetNode == null) nodeIdToEdgeMissingTarget.Add(targetId, diskEdge);
+                else diskEdge.target = targetNode;
+
+                // Add to outgoing edge list
+                AddToEdgeList(nodeIdToOutgoingEdges, sourceId, diskEdge);
+
+                return diskEdge;
             });
+
+            // Populate node's edge field
+            for (int i = 0; i < nodes.Length; i++)
+            {
+                Node node = nodes[i];
+                List<Edge> outgoingEdges;
+                nodeIdToOutgoingEdges.TryGetValue(node.id, out outgoingEdges);
+                if (outgoingEdges == null) node.outgoingEdges = new Edge[0];
+                else node.outgoingEdges = nodeIdToOutgoingEdges[node.id].ToArray();
+            }
+            return nodes;
+        }
+
+        static void AddToEdgeList(Dictionary<uint, List<Edge>> map, uint nodeId, Edge edge)
+        {
+            List<Edge> edgeList;
+            map.TryGetValue(nodeId, out edgeList);
+            if (edgeList == null)
+            {
+                edgeList = new();
+                map[nodeId] = edgeList;
+            }
+            edgeList.Add(edge);
         }
 
         static T[] FetchConversationChildObjects<T>(
@@ -296,14 +360,14 @@ namespace GameScript
 
         static void ReadTable(
             SqliteConnection connection, string tableName, Action<uint> onCount,
-            Action<uint, SqliteDataReader> onRow)
+            Action<uint, SqliteDataReader> onRow, string whereClause = "")
         {
             // Fetch row count
             uint count = 0;
             using (SqliteCommand command = connection.CreateCommand())
             {
                 command.CommandType = CommandType.Text;
-                command.CommandText = $"SELECT COUNT(*) as count FROM {tableName};";
+                command.CommandText = $"SELECT COUNT(*) as count FROM {tableName} {whereClause};";
                 using (SqliteDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read()) count = (uint)reader.GetInt64(0);
@@ -316,7 +380,7 @@ namespace GameScript
             {
                 uint limit = EditorConstants.k_SqlBatchSize;
                 uint offset = i;
-                string query = $"SELECT * FROM {tableName} "
+                string query = $"SELECT * FROM {tableName} {whereClause} "
                     + $"ORDER BY id ASC LIMIT {limit} OFFSET {offset};";
                 uint j = 0;
                 using (SqliteCommand command = connection.CreateCommand())

@@ -3,10 +3,10 @@ using System;
 namespace GameScript
 {
     [Serializable]
-    public class DiskActor
+    public class Actor
     {
         public uint id;
         public string name;
-        public DiskLocalization localizedName;
+        public Localization localizedName;
     }
 }

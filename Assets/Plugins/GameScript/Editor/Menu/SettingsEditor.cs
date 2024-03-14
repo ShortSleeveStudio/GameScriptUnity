@@ -147,7 +147,7 @@ namespace GameScript
             routinePathField.SetEnabled(false);
             routinePathField.RegisterValueChangedCallback((ChangeEvent<string> change) =>
             {
-                OnRoutinePathChanged(databaseImportButton, change.newValue);
+                OnRoutinePathChanged(routinePathField, databaseImportButton, change.newValue);
             });
 
             // Select Routine Path Button
@@ -184,7 +184,7 @@ namespace GameScript
             #region Initialization
             // Set Initial Visibility for Database Path
             string routinePath = serializedObject.FindProperty("RoutinePath").stringValue;
-            OnRoutinePathChanged(databaseImportButton, routinePath);
+            OnRoutinePathChanged(routinePathField, databaseImportButton, routinePath);
             string databasePath = serializedObject.FindProperty("DatabasePath").stringValue;
             OnDbPathChanged(databasePathField, databaseVersionField, databasePath);
             #endregion
@@ -215,9 +215,10 @@ namespace GameScript
             {
                 Path.GetFullPath(newPath);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Debug.LogWarning($"Conversation data folder was invalid. Resetting to default.");
+                Debug.LogException(e);
                 conversationDataPath.value = RuntimeConstants.k_DefaultStreamingAssetsPath;
                 return;
             }
@@ -243,9 +244,17 @@ namespace GameScript
             }
         }
 
-        private void OnRoutinePathChanged(Button databaseImportButton, string newPath)
+        private void OnRoutinePathChanged(TextField routinePathField, Button databaseImportButton, string newPath)
         {
-            databaseImportButton.SetEnabled(Directory.Exists(newPath));
+            if (Directory.Exists(newPath))
+            {
+                databaseImportButton.SetEnabled(true);
+            }
+            else
+            {
+                routinePathField.value = "";
+                databaseImportButton.SetEnabled(false);
+            }
         }
 
         private void OnDbPathChanged(

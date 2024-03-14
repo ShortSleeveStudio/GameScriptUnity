@@ -6,8 +6,8 @@ namespace GameScript
     public class ConversationContext
     {
         private RoutineState m_RoutineState;
-        private GameConversation m_Conversation;
-        private GameNode m_Node;
+        private Conversation m_Conversation;
+        private Node m_Node;
 
         public ConversationContext(Settings settings)
         {
@@ -15,11 +15,11 @@ namespace GameScript
         }
 
         #region Conversation
-        public GameConversation GetCurrentConversation() => m_Conversation;
-        public void SetCurrentConversation(GameConversation conversation)
+        public Conversation GetCurrentConversation() => m_Conversation;
+        public void SetCurrentConversation(Conversation conversation)
             => m_Conversation = conversation;
-        public GameNode GetCurrentNode() => m_Node;
-        public void SetCurrentNode(GameNode node) => m_Node = node;
+        public Node GetCurrentNode() => m_Node;
+        public void SetCurrentNode(Node node) => m_Node = node;
         #endregion
 
         #region Execution
