@@ -8,8 +8,8 @@ namespace GameScript
     public class ActorPrincipal
     {
         public const string TABLE_NAME = "actor_principal";
-        public long id { get; set; }
-        public long principal { get; set; }
+        public long id;
+        public long principal;
 
         public static ActorPrincipal FromReader(SqliteDataReader reader)
         {

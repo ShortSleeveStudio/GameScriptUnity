@@ -8,11 +8,11 @@ namespace GameScript
     public class Actors
     {
         public const string TABLE_NAME = "actors";
-        public long id { get; set; }
-        public string name { get; set; }
-        public string color { get; set; }
-        public long localizedName { get; set; }
-        public bool isSystemCreated { get; set; }
+        public long id;
+        public string name;
+        public string color;
+        public long localizedName;
+        public bool isSystemCreated;
 
         public static Actors FromReader(SqliteDataReader reader)
         {

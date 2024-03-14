@@ -127,7 +127,9 @@ namespace GameScript
 
                 // Load database
                 string routineOutputPath = serializedObject.FindProperty("RoutinePath").stringValue;
-                DatabaseImporter.ImportDatabase(dbPath, routineOutputPath);
+                string conversationOutputPath
+                    = serializedObject.FindProperty("ConversationDataPath").stringValue;
+                DatabaseImporter.ImportDatabase(dbPath, routineOutputPath, conversationOutputPath);
             };
             #endregion
 

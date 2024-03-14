@@ -2,7 +2,7 @@ namespace GameScript
 {
     public static class Database
     {
-        public static string SQLitePathToURI(string path)
+        public static string SqlitePathToURI(string path)
         {
             return "URI=file:" + path;
         }

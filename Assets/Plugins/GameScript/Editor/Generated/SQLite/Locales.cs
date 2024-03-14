@@ -8,10 +8,10 @@ namespace GameScript
     public class Locales
     {
         public const string TABLE_NAME = "locales";
-        public long id { get; set; }
-        public string name { get; set; }
-        public bool isSystemCreated { get; set; }
-        public long localizedName { get; set; }
+        public long id;
+        public string name;
+        public bool isSystemCreated;
+        public long localizedName;
 
         public static Locales FromReader(SqliteDataReader reader)
         {

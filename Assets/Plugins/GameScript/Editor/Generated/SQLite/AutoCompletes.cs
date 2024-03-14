@@ -8,12 +8,12 @@ namespace GameScript
     public class AutoCompletes
     {
         public const string TABLE_NAME = "auto_completes";
-        public long id { get; set; }
-        public string name { get; set; }
-        public long icon { get; set; }
-        public long rule { get; set; }
-        public string insertion { get; set; }
-        public string documentation { get; set; }
+        public long id;
+        public string name;
+        public long icon;
+        public long rule;
+        public string insertion;
+        public string documentation;
 
         public static AutoCompletes FromReader(SqliteDataReader reader)
         {

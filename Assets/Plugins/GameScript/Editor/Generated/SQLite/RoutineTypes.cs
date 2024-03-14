@@ -8,8 +8,8 @@ namespace GameScript
     public class RoutineTypes
     {
         public const string TABLE_NAME = "routine_types";
-        public long id { get; set; }
-        public string name { get; set; }
+        public long id;
+        public string name;
 
         public static RoutineTypes FromReader(SqliteDataReader reader)
         {

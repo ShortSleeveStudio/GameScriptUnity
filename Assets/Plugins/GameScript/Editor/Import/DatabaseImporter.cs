@@ -8,8 +8,6 @@ using UnityEngine;
 
 namespace GameScript
 {
-
-
     public static class DatabaseImporter
     {
         #region Constants
@@ -26,7 +24,7 @@ namespace GameScript
         #region API
         public static string GetDatabaseVersion(string sqliteDatabasePath)
         {
-            using (SqliteConnection connection = new(Database.SQLitePathToURI(sqliteDatabasePath)))
+            using (SqliteConnection connection = new(Database.SqlitePathToURI(sqliteDatabasePath)))
             {
                 // Open connection
                 connection.Open();
@@ -45,12 +43,13 @@ namespace GameScript
             return null;
         }
 
-        public static void ImportDatabase(string sqliteDatabasePath, string routineOutputDirectory)
-            => ImportDatabase(sqliteDatabasePath, routineOutputDirectory, k_DbCodeOutputDirectory,
-                k_FlagOutputDirectory);
+        public static void ImportDatabase(string sqliteDatabasePath, string routineOutputDirectory,
+            string conversationOutputDirectory)
+                => ImportDatabase(sqliteDatabasePath, routineOutputDirectory,
+                    conversationOutputDirectory, k_DbCodeOutputDirectory, k_FlagOutputDirectory);
         public static async void ImportDatabase(
-            string sqliteDatabasePath, string routineOutputDirectory, string dbCodeDirectory,
-            string flagOutputDirectory)
+            string sqliteDatabasePath, string routineOutputDirectory,
+            string conversationOutputDirectory, string dbCodeDirectory, string flagOutputDirectory)
         {
             try
             {
@@ -61,9 +60,15 @@ namespace GameScript
                     DatabaseCodeGenerator.GenerateDatabaseCode(sqliteDatabasePath, dbCodeDirectory);
                     result = Transpiler.Transpile(
                         sqliteDatabasePath, routineOutputDirectory, flagOutputDirectory);
+                    ConversationDataGenerator.GenerateConversationData(sqliteDatabasePath,
+                        conversationOutputDirectory, result.RoutineIdToIndex, result.NoopRoutineId);
                 });
+
+                // Update Settings
                 Settings.Instance.MaxFlags = result.MaxFlags;
-                AssetDatabase.Refresh();
+
+                // Refresh Database
+                // AssetDatabase.Refresh();
             }
             catch (Exception e)
             {

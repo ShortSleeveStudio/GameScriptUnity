@@ -8,13 +8,13 @@ namespace GameScript
     public class Conversations
     {
         public const string TABLE_NAME = "conversations";
-        public long id { get; set; }
-        public string name { get; set; }
-        public bool isSystemCreated { get; set; }
-        public string notes { get; set; }
-        public bool isDeleted { get; set; }
-        public bool isLayoutAuto { get; set; }
-        public bool isLayoutVertical { get; set; }
+        public long id;
+        public string name;
+        public bool isSystemCreated;
+        public string notes;
+        public bool isDeleted;
+        public bool isLayoutAuto;
+        public bool isLayoutVertical;
 
         public static Conversations FromReader(SqliteDataReader reader)
         {

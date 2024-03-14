@@ -8,9 +8,9 @@ namespace GameScript
     public class Filters
     {
         public const string TABLE_NAME = "filters";
-        public long id { get; set; }
-        public string name { get; set; }
-        public string notes { get; set; }
+        public long id;
+        public string name;
+        public string notes;
 
         public static Filters FromReader(SqliteDataReader reader)
         {

@@ -8,8 +8,8 @@ namespace GameScript
     public class Version
     {
         public const string TABLE_NAME = "version";
-        public long id { get; set; }
-        public string version { get; set; }
+        public long id;
+        public string version;
 
         public static Version FromReader(SqliteDataReader reader)
         {

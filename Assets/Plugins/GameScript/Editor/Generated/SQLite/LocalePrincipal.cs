@@ -8,8 +8,8 @@ namespace GameScript
     public class LocalePrincipal
     {
         public const string TABLE_NAME = "locale_principal";
-        public long id { get; set; }
-        public long principal { get; set; }
+        public long id;
+        public long principal;
 
         public static LocalePrincipal FromReader(SqliteDataReader reader)
         {

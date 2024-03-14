@@ -8,8 +8,8 @@ namespace GameScript
     public class ProgrammingLanguagePrincipal
     {
         public const string TABLE_NAME = "programming_language_principal";
-        public long id { get; set; }
-        public long principal { get; set; }
+        public long id;
+        public long principal;
 
         public static ProgrammingLanguagePrincipal FromReader(SqliteDataReader reader)
         {

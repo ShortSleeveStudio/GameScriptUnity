@@ -8,14 +8,14 @@ namespace GameScript
     public class Routines
     {
         public const string TABLE_NAME = "routines";
-        public long id { get; set; }
-        public string name { get; set; }
-        public string code { get; set; }
-        public long type { get; set; }
-        public bool isCondition { get; set; }
-        public string notes { get; set; }
-        public bool isSystemCreated { get; set; }
-        public long parent { get; set; }
+        public long id;
+        public string name;
+        public string code;
+        public long type;
+        public bool isCondition;
+        public string notes;
+        public bool isSystemCreated;
+        public long parent;
 
         public static Routines FromReader(SqliteDataReader reader)
         {

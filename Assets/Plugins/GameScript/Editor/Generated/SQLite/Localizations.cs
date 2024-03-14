@@ -8,13 +8,13 @@ namespace GameScript
     public class Localizations
     {
         public const string TABLE_NAME = "localizations";
-        public long id { get; set; }
-        public string name { get; set; }
-        public long parent { get; set; }
-        public bool isSystemCreated { get; set; }
-        public string locale_1 { get; set; }
-        public string locale_2 { get; set; }
-        public string locale_3 { get; set; }
+        public long id;
+        public string name;
+        public long parent;
+        public bool isSystemCreated;
+        public string locale_1;
+        public string locale_2;
+        public string locale_3;
 
         public static Localizations FromReader(SqliteDataReader reader)
         {

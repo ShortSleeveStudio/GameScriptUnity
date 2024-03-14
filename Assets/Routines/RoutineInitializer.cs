@@ -9,7 +9,7 @@ namespace GameScript
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSplashScreen)]
         private static void Initialize()
         {
-            RoutineDirectory.Directory = new System.Action<ConversationContext>[4];
+            RoutineDirectory.Directory = new System.Action<ConversationContext>[6];
             RoutineDirectory.Directory[0] = (ConversationContext ctx) =>
             {
             };
@@ -60,8 +60,8 @@ namespace GameScript
                 {
                     if (!ctx.IsBlockExecuted(3))
                     {
-                        if(true){Debug.Log("C2");
-                        }Helpers.TestSig(ctx.AcquireSignal(3));
+                        Debug.Log("C2");
+                        Helpers.TestSig(ctx.AcquireSignal(3));
                         ctx.SetBlockExecuted(3);
                     }
                     if (ctx.HaveBlockSignalsFired(3))
@@ -84,6 +84,11 @@ namespace GameScript
             };
             RoutineDirectory.Directory[3] = (ConversationContext ctx) =>
             {
+                Debug.Log("Default Routine");
+            };
+            RoutineDirectory.Directory[4] = (ConversationContext ctx) =>
+            {
+                ctx.SetConditionResult(10>100);
             };
         }
     }

@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using Mono.Data.Sqlite;
 using UnityEditor;
-using UnityEngine;
 using static GameScript.StringWriter;
 namespace GameScript
 {
@@ -28,7 +27,7 @@ namespace GameScript
                 List<string> tableNames = new();
                 Dictionary<string, List<DatabaseColumn>> tableToColumns = new();
                 using (SqliteConnection connection
-                    = new(Database.SQLitePathToURI(sqliteDatabasePath)))
+                    = new(Database.SqlitePathToURI(sqliteDatabasePath)))
                 {
                     // Open connection
                     connection.Open();
@@ -188,7 +187,7 @@ namespace GameScript
                     {
                         DatabaseColumn column = entry.Value[i];
                         string columnType = DatabaseTypeToTypeString(column.type);
-                        WriteLine(writer, 2, $"public {columnType} {column.name} {{ get; set; }}");
+                        WriteLine(writer, 2, $"public {columnType} {column.name};");
                     }
                     WriteLine(writer, 0, "");
                     // Deserializer

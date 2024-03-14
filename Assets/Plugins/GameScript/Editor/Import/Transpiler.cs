@@ -23,6 +23,7 @@ namespace GameScript
             // Create flag cache
             TranspilerResult transpilerResult = new TranspilerResult();
             HashSet<string> flagCache = new();
+            Dictionary<uint, uint> routineIdToIndex = new();
             string importString = "";
 
             int progressId = 0;
@@ -32,7 +33,7 @@ namespace GameScript
                 progressId = Progress.Start("Fetching routine count");
 
                 // Connect to database
-                using (SqliteConnection connection = new(SQLitePathToURI(sqliteDatabasePath)))
+                using (SqliteConnection connection = new(SqlitePathToURI(sqliteDatabasePath)))
                 {
                     // Open connection
                     connection.Open();
@@ -100,20 +101,20 @@ namespace GameScript
                             + $"= new System.Action<ConversationContext>[{routineCount + 1}];");
 
                         // Write Routines
-                        int currentIndex = 0;
-                        for (int i = 0; i < routineCount; i += EditorConstants.k_SqlBackSize)
+                        uint currentIndex = 0;
+                        for (uint i = 0; i < routineCount; i += EditorConstants.k_SqlBatchSize)
                         {
                             Progress.Report(
                                 progressId, (float)i / routineCount, "Transpiling routines");
-                            int limit = EditorConstants.k_SqlBackSize;
-                            int offset = i;
+                            uint limit = EditorConstants.k_SqlBatchSize;
+                            uint offset = i;
                             string query = $"SELECT * FROM {Routines.TABLE_NAME} "
                                 + $"{routineWhereClause} "
                                 + $"ORDER BY id ASC LIMIT {limit} OFFSET {offset};";
                             using (SqliteCommand command = connection.CreateCommand())
                             {
                                 // Get routine count
-                                int j = 0;
+                                uint j = 0;
                                 command.CommandType = CommandType.Text;
                                 command.CommandText = query;
                                 using (SqliteDataReader reader = command.ExecuteReader())
@@ -131,12 +132,15 @@ namespace GameScript
                                             case (int)RoutineType.User:
                                             case (int)RoutineType.Default:
                                                 WriteRoutine(
-                                                    routine, writer, flagCache, currentIndex);
+                                                    routine, writer, flagCache, currentIndex,
+                                                    routineIdToIndex);
                                                 break;
                                             case (int)RoutineType.Import:
+                                                // We'll use the import routine as the noop routine
+                                                transpilerResult.NoopRoutineId = (uint)routine.id;
                                                 WriteRoutine(
-                                                    new() { code = "" }, writer, flagCache,
-                                                    currentIndex);
+                                                    new() { id = routine.id, code = "" }, writer,
+                                                    flagCache, currentIndex, routineIdToIndex);
                                                 break;
                                             default:
                                                 throw new Exception(
@@ -147,9 +151,6 @@ namespace GameScript
                                 }
                             }
                         }
-
-                        // Write the noop routine
-                        WriteRoutine(new() { code = "" }, writer, flagCache, ++currentIndex);
 
                         WriteLine(writer, 2, "}"); // Static block
                         WriteLine(writer, 1, "}"); // Class
@@ -174,14 +175,17 @@ namespace GameScript
 
             // Return transpile result
             transpilerResult.MaxFlags = (uint)flagCache.Count;
+            transpilerResult.RoutineIdToIndex = routineIdToIndex;
             return transpilerResult;
         }
         #endregion
 
         #region Helpers
         static void WriteRoutine(
-            Routines routine, StreamWriter writer, HashSet<string> flagCache, int methodIndex)
+            Routines routine, StreamWriter writer, HashSet<string> flagCache, uint methodIndex,
+            Dictionary<uint, uint> routineIdToIndex)
         {
+            routineIdToIndex.Add((uint)routine.id, methodIndex);
             WriteLine(writer, 3,
                 $"RoutineDirectory.Directory[{methodIndex}] = (ConversationContext ctx) =>");
             WriteLine(writer, 3, "{");
