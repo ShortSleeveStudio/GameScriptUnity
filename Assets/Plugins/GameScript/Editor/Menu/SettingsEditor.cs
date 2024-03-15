@@ -14,7 +14,8 @@ namespace GameScript
 
         #endregion
         #region Variables
-        [SerializeField] private VisualTreeAsset m_SettingsXML;
+        [SerializeField]
+        private VisualTreeAsset m_SettingsXML;
         #endregion
 
         public override VisualElement CreateInspectorGUI()
@@ -27,7 +28,8 @@ namespace GameScript
             IntegerField maxConversations = new IntegerField();
             maxConversations.name = "InitialConversationPool";
             maxConversations.label = "Initial Conversation Pool Size";
-            maxConversations.tooltip = "This will decide how many simultaneous conversations can "
+            maxConversations.tooltip =
+                "This will decide how many simultaneous conversations can "
                 + $"be run before {RuntimeConstants.k_AppName} needs to allocate more memory.";
             maxConversations.bindingPath = "InitialConversationPool";
             #endregion
@@ -53,10 +55,12 @@ namespace GameScript
             conversationDataPath.bindingPath = "ConversationDataPath";
             conversationDataPath.tooltip = "This is where conversation data will be stored.";
             conversationDataPath.SetEnabled(false);
-            conversationDataPath.RegisterValueChangedCallback((ChangeEvent<string> change) =>
-            {
-                OnConversationDataPathChanged(conversationDataPath, change.newValue);
-            });
+            conversationDataPath.RegisterValueChangedCallback(
+                (ChangeEvent<string> change) =>
+                {
+                    OnConversationDataPathChanged(conversationDataPath, change.newValue);
+                }
+            );
 
             // Conversation Path Button
             Button conversationDataButton = new Button();
@@ -72,7 +76,8 @@ namespace GameScript
                 string path = EditorUtility.OpenFolderPanel(
                     "Select Conversation Data Folder",
                     streamingAssetsPath,
-                    RuntimeConstants.k_AppName);
+                    RuntimeConstants.k_AppName
+                );
                 conversationDataPath.value = path;
             };
             #endregion
@@ -89,10 +94,12 @@ namespace GameScript
             databaseVersionField.label = "Version";
             databaseVersionField.bindingPath = "DatabaseVersion";
             databaseVersionField.SetEnabled(false);
-            databaseVersionField.RegisterValueChangedCallback((ChangeEvent<string> change) =>
-            {
-                OnDbVersionChanged(databaseVersionField, change.newValue);
-            });
+            databaseVersionField.RegisterValueChangedCallback(
+                (ChangeEvent<string> change) =>
+                {
+                    OnDbVersionChanged(databaseVersionField, change.newValue);
+                }
+            );
 
             // Database Path
             TextField databasePathField = new();
@@ -100,10 +107,12 @@ namespace GameScript
             databasePathField.label = "Database";
             databasePathField.bindingPath = "DatabasePath";
             databasePathField.SetEnabled(false);
-            databasePathField.RegisterValueChangedCallback((ChangeEvent<string> change) =>
-            {
-                OnDbPathChanged(databasePathField, databaseVersionField, change.newValue);
-            });
+            databasePathField.RegisterValueChangedCallback(
+                (ChangeEvent<string> change) =>
+                {
+                    OnDbPathChanged(databasePathField, databaseVersionField, change.newValue);
+                }
+            );
 
             // Select Database Button
             Button databaseImportButton = new Button();
@@ -116,19 +125,23 @@ namespace GameScript
                 {
                     EditorUtility.DisplayDialog(
                         "Import in Progress",
-                        "Database import is in progress. Please wait for it to finish.", "OK");
+                        "Database import is in progress. Please wait for it to finish.",
+                        "OK"
+                    );
                     return;
                 }
 
                 // Set new path
                 string dbPath = EditorUtility.OpenFilePanel("Import Database", "", "");
-                if (string.IsNullOrEmpty(dbPath)) return;
+                if (string.IsNullOrEmpty(dbPath))
+                    return;
                 databasePathField.value = dbPath;
 
                 // Load database
                 string routineOutputPath = serializedObject.FindProperty("RoutinePath").stringValue;
-                string conversationOutputPath
-                    = serializedObject.FindProperty("ConversationDataPath").stringValue;
+                string conversationOutputPath = serializedObject
+                    .FindProperty("ConversationDataPath")
+                    .stringValue;
                 DatabaseImporter.ImportDatabase(dbPath, routineOutputPath, conversationOutputPath);
             };
             #endregion
@@ -145,10 +158,12 @@ namespace GameScript
             routinePathField.label = "Routine Output Folder";
             routinePathField.bindingPath = "RoutinePath";
             routinePathField.SetEnabled(false);
-            routinePathField.RegisterValueChangedCallback((ChangeEvent<string> change) =>
-            {
-                OnRoutinePathChanged(routinePathField, databaseImportButton, change.newValue);
-            });
+            routinePathField.RegisterValueChangedCallback(
+                (ChangeEvent<string> change) =>
+                {
+                    OnRoutinePathChanged(routinePathField, databaseImportButton, change.newValue);
+                }
+            );
 
             // Select Routine Path Button
             Button routinePathButton = new Button();
@@ -158,7 +173,8 @@ namespace GameScript
             {
                 // Set new path
                 string path = EditorUtility.OpenFolderPanel("Select Routine Folder", "", "");
-                if (string.IsNullOrEmpty(path)) return;
+                if (string.IsNullOrEmpty(path))
+                    return;
                 routinePathField.value = path;
             };
             #endregion
@@ -208,7 +224,8 @@ namespace GameScript
         private void OnConversationDataPathChanged(TextField conversationDataPath, string newPath)
         {
             // Skip validating default path
-            if (newPath == RuntimeConstants.k_DefaultStreamingAssetsPath) return;
+            if (newPath == RuntimeConstants.k_DefaultStreamingAssetsPath)
+                return;
 
             // Ensure valid path
             try
@@ -234,17 +251,24 @@ namespace GameScript
                     isParent = true;
                     break;
                 }
-                else dir = dir.Parent;
+                else
+                    dir = dir.Parent;
             }
             if (!isParent)
             {
-                Debug.LogWarning("Conversation data must go in the StreamingAssets folder "
-                    + "or a subfolder thereof. Resetting to default.");
+                Debug.LogWarning(
+                    "Conversation data must go in the StreamingAssets folder "
+                        + "or a subfolder thereof. Resetting to default."
+                );
                 conversationDataPath.value = RuntimeConstants.k_DefaultStreamingAssetsPath;
             }
         }
 
-        private void OnRoutinePathChanged(TextField routinePathField, Button databaseImportButton, string newPath)
+        private void OnRoutinePathChanged(
+            TextField routinePathField,
+            Button databaseImportButton,
+            string newPath
+        )
         {
             if (Directory.Exists(newPath))
             {
@@ -258,7 +282,10 @@ namespace GameScript
         }
 
         private void OnDbPathChanged(
-            TextField databasePathField, TextField databaseVersionField, string newPath)
+            TextField databasePathField,
+            TextField databaseVersionField,
+            string newPath
+        )
         {
             if (File.Exists(newPath))
             {

@@ -5,13 +5,13 @@ namespace GameScript
     [Serializable]
     public class Node
     {
-        public uint id;
-        public uint actor;
-        public Localization uiResponseText;
-        public Localization voiceText;
-        public uint condition; // Index into routine array
-        public uint code; // Index into routine array
-        public bool isPreventResponse;
-        public Edge[] outgoingEdges;
+        public uint Id;
+        public Actor Actor;
+        public Localization UIResponseText;
+        public Localization VoiceText;
+        public uint Condition; // Index into routine array
+        public uint Code; // Index into routine array
+        public bool IsPreventResponse;
+        public Edge[] OutgoingEdges;
     }
 }

@@ -2,6 +2,6 @@ namespace GameScript
 {
     public static class RoutineDirectory
     {
-        public static System.Action<ConversationContext>[] Directory;
+        public static System.Action<RunnerContext>[] Directory;
     }
 }

@@ -5,7 +5,7 @@ namespace GameScript
     [Serializable]
     public class Localization
     {
-        public uint id;
-        public string[] localizations; // Lookup with locale.index
+        public uint Id;
+        public string[] Localizations; // Lookup with Locale.Index
     }
 }

@@ -5,8 +5,8 @@ namespace GameScript
     [Serializable]
     public class Actor
     {
-        public uint id;
-        public string name;
-        public Localization localizedName;
+        public uint Id;
+        public string Name;
+        public Localization LocalizedName;
     }
 }

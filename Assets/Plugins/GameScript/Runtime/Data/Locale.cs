@@ -5,9 +5,9 @@ namespace GameScript
     [Serializable]
     public class Locale
     {
-        public uint id;
-        public uint index; // Used to lookup localization
-        public string name;
-        public Localization localizedName;
+        public uint Id;
+        public uint Index; // Used to lookup localization
+        public string Name;
+        public Localization LocalizedName;
     }
 }

@@ -16,5 +16,5 @@ MonoBehaviour:
   InitialConversationPool: 1
   DatabasePath: C:/Users/emful/Desktop/DATABASE/EXPORT_DATA/HELPER_DB___DO_NOT_SHIP.db
   DatabaseVersion: 0.0.0
-  RoutinePath: D:/Work/GameScriptUnity/Assets/Routines
+  RoutinePath: D:/Work/GameScriptUnity/Assets/GameScript
   ConversationDataPath: D:/Work/GameScriptUnity/Assets/StreamingAssets/GameScript

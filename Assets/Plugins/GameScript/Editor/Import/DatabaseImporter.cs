@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Threading.Tasks;
 using Mono.Data.Sqlite;
-using UnityEditor;
 using UnityEngine;
 
 namespace GameScript
@@ -13,9 +11,20 @@ namespace GameScript
     {
         #region Constants
         private static readonly string k_DbCodeOutputDirectory = Path.Combine(
-            Application.dataPath, "Plugins", "GameScript", "Editor", "Generated", "SQLite");
-        private static readonly string k_FlagOutputDirectory
-            = Path.Combine(Application.dataPath, "Plugins", "GameScript", "Runtime", "Generated");
+            Application.dataPath,
+            "Plugins",
+            "GameScript",
+            "Editor",
+            "Generated",
+            "SQLite"
+        );
+        private static readonly string k_FlagOutputDirectory = Path.Combine(
+            Application.dataPath,
+            "Plugins",
+            "GameScript",
+            "Runtime",
+            "Generated"
+        );
         #endregion
 
         #region Variables
@@ -25,7 +34,7 @@ namespace GameScript
         #region API
         public static string GetDatabaseVersion(string sqliteDatabasePath)
         {
-            using (SqliteConnection connection = new(Database.SqlitePathToURI(sqliteDatabasePath)))
+            using (SqliteConnection connection = new(DbHelper.SqlitePathToURI(sqliteDatabasePath)))
             {
                 // Open connection
                 connection.Open();
@@ -37,20 +46,34 @@ namespace GameScript
                     command.CommandText = $"SELECT version FROM {Version.TABLE_NAME};";
                     using (SqliteDataReader reader = command.ExecuteReader())
                     {
-                        while (reader.Read()) return reader.GetString(0);
+                        while (reader.Read())
+                            return reader.GetString(0);
                     }
                 }
             }
             return null;
         }
 
-        public static void ImportDatabase(string sqliteDatabasePath, string routineOutputDirectory,
-            string conversationOutputDirectory)
-                => ImportDatabase(sqliteDatabasePath, routineOutputDirectory,
-                    conversationOutputDirectory, k_DbCodeOutputDirectory, k_FlagOutputDirectory);
+        public static void ImportDatabase(
+            string sqliteDatabasePath,
+            string routineOutputDirectory,
+            string conversationOutputDirectory
+        ) =>
+            ImportDatabase(
+                sqliteDatabasePath,
+                routineOutputDirectory,
+                conversationOutputDirectory,
+                k_DbCodeOutputDirectory,
+                k_FlagOutputDirectory
+            );
+
         public static async void ImportDatabase(
-            string sqliteDatabasePath, string routineOutputDirectory,
-            string conversationOutputDirectory, string dbCodeDirectory, string flagOutputDirectory)
+            string sqliteDatabasePath,
+            string routineOutputDirectory,
+            string conversationOutputDirectory,
+            string dbCodeDirectory,
+            string flagOutputDirectory
+        )
         {
             try
             {
@@ -61,17 +84,30 @@ namespace GameScript
                 await Task.Run(() =>
                 {
                     codeGenResult = DatabaseCodeGenerator.GenerateDatabaseCode(
-                        sqliteDatabasePath, dbCodeDirectory);
-                    if (codeGenResult.WasError) return;
+                        sqliteDatabasePath,
+                        dbCodeDirectory
+                    );
+                    if (codeGenResult.WasError)
+                        return;
                     transpilerResult = Transpiler.Transpile(
-                        sqliteDatabasePath, routineOutputDirectory, flagOutputDirectory);
-                    if (transpilerResult.WasError) return;
+                        sqliteDatabasePath,
+                        routineOutputDirectory,
+                        flagOutputDirectory
+                    );
+                    if (transpilerResult.WasError)
+                        return;
                     conversationResult = ConversationDataGenerator.GenerateConversationData(
-                        sqliteDatabasePath, conversationOutputDirectory,
-                        transpilerResult.RoutineIdToIndex);
+                        sqliteDatabasePath,
+                        conversationOutputDirectory,
+                        transpilerResult.RoutineIdToIndex
+                    );
                 });
-                if (codeGenResult.WasError
-                    || transpilerResult.WasError || conversationResult.WasError) return;
+                if (
+                    codeGenResult.WasError
+                    || transpilerResult.WasError
+                    || conversationResult.WasError
+                )
+                    return;
 
                 // Update Settings
                 Settings.Instance.MaxFlags = transpilerResult.MaxFlags;

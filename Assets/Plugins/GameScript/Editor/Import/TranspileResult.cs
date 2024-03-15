@@ -7,19 +7,15 @@ namespace GameScript
         public bool WasError;
     }
 
-    public class DbCodeGeneratorResult : ImportResult
-    {
-    }
+    public class DbCodeGeneratorResult : ImportResult { }
 
     public class TranspilerResult : ImportResult
     {
         public uint MaxFlags;
         public Dictionary<uint, uint> RoutineIdToIndex;
+
         public override string ToString() => $"MaxFlags = {MaxFlags}";
     }
 
-    public class ConversationDataGeneratorResult : ImportResult
-    {
-
-    }
+    public class ConversationDataGeneratorResult : ImportResult { }
 }

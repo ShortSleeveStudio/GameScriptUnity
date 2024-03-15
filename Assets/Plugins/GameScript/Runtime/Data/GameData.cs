@@ -5,9 +5,9 @@ namespace GameScript
     [Serializable]
     public class GameData
     {
-        public Localization[] localizations;
-        public Locale[] locales;
-        public Actor[] actors;
-        public Conversation[] conversations;
+        public Localization[] Localizations;
+        public Locale[] Locales;
+        public Actor[] Actors;
+        public Conversation[] Conversations;
     }
 }

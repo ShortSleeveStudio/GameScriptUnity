@@ -9,10 +9,16 @@ namespace GameScript
     public class Settings : ScriptableObject
     {
         #region Constants
-        private static readonly string k_SettingsAsset
-            = RuntimeConstants.k_SettingsAssetName + ".asset";
+        private static readonly string k_SettingsAsset =
+            RuntimeConstants.k_SettingsAssetName + ".asset";
         private static readonly string k_SettingsAssetPath = Path.Combine(
-            "Assets", "Plugins", "GameScript", "Runtime", "Resources", k_SettingsAsset);
+            "Assets",
+            "Plugins",
+            "GameScript",
+            "Runtime",
+            "Resources",
+            k_SettingsAsset
+        );
         #endregion
 
         #region Singleton
@@ -36,7 +42,8 @@ namespace GameScript
                         m_Instance = asset;
 #else
                         throw new Exception(
-                            $"{RuntimeConstants.APP_NAME} settings ScriptableObject not found");
+                            $"{RuntimeConstants.APP_NAME} settings ScriptableObject not found"
+                        );
 #endif
                     }
                 }
@@ -45,7 +52,7 @@ namespace GameScript
         }
         #endregion
 
-        #region Runtime Settings 
+        #region Runtime Settings
         public uint MaxFlags;
         public uint InitialConversationPool;
         #endregion

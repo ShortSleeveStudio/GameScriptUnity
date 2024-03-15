@@ -1,4 +1,3 @@
-
 using System.IO;
 using Antlr4.Runtime;
 
@@ -9,12 +8,18 @@ public class TranspileErrorListener : BaseErrorListener
     public bool WasError { get; private set; }
     public string ErrorMessage { get; private set; }
 
-
     public override void SyntaxError(
-        TextWriter output, IRecognizer recognizer, IToken offendingSymbol, int line,
-        int charPositionInLine, string msg, RecognitionException e)
+        TextWriter output,
+        IRecognizer recognizer,
+        IToken offendingSymbol,
+        int line,
+        int charPositionInLine,
+        string msg,
+        RecognitionException e
+    )
     {
-        if (WasError) return;
+        if (WasError)
+            return;
         WasError = true;
         ErrorLine = line;
         ErrorColumn = charPositionInLine;

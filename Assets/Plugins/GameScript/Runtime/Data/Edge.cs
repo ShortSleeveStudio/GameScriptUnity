@@ -5,9 +5,9 @@ namespace GameScript
     [Serializable]
     public class Edge
     {
-        public uint id;
-        public Node source;
-        public Node target;
-        public long priority;
+        public uint Id;
+        public Node Source;
+        public Node Target;
+        public byte Priority;
     }
 }

@@ -32,10 +32,7 @@ namespace GameScript
             ICharStream stream = CharStreams.fromString(routine.code.Trim());
             CSharpRoutineLexer lexer = new CSharpRoutineLexer(stream);
             ITokenStream tokens = new CommonTokenStream(lexer);
-            CSharpRoutineParser parser = new(tokens)
-            {
-                BuildParseTree = true,
-            };
+            CSharpRoutineParser parser = new(tokens) { BuildParseTree = true, };
             lexer.RemoveErrorListeners();
             parser.RemoveErrorListeners();
             parser.AddErrorListener(errorListener);
@@ -50,7 +47,8 @@ namespace GameScript
             }
             catch (Exception)
             {
-                string message = $"Transpilation error in routine {routine.id} at "
+                string message =
+                    $"Transpilation error in routine {routine.id} at "
                     + $"line: {errorListener.ErrorLine} "
                     + $"column: {errorListener.ErrorColumn} "
                     + $"message: {errorListener.ErrorMessage}";
@@ -87,14 +85,17 @@ namespace GameScript
 
         private bool IsBlockOrCondition(IParseTree routineTree)
         {
-            if (m_Routine.isCondition) return true;
-            if (routineTree.ChildCount == 0) return true;
+            if (m_Routine.isCondition)
+                return true;
+            if (routineTree.ChildCount == 0)
+                return true;
 
             // Get first child
             IParseTree routineChild = routineTree.GetChild(0);
 
             // This is a terminal node
-            if (IsEOF(routineChild)) return true;
+            if (IsEOF(routineChild))
+                return true;
 
             switch (routineChild)
             {
@@ -104,7 +105,8 @@ namespace GameScript
                     return true;
                 default:
                     throw new Exception(
-                        $"Routine began with {routineChild.GetType()} instead of scheduled/block");
+                        $"Routine began with {routineChild.GetType()} instead of scheduled/block"
+                    );
             }
         }
 
@@ -185,10 +187,16 @@ namespace GameScript
                     AppendNoLine(m_Accumulator, 0, "if (");
                     foreach (string entryFlag in scheduledBlock.EntryFlags)
                     {
-                        if (first) first = false;
-                        else AppendNoLine(m_Accumulator, 0, " && ");
-                        AppendNoLine(m_Accumulator, 0, "ctx.IsFlagSet((int)"
-                            + $"{EditorConstants.k_RoutineFlagEnum}.{entryFlag})");
+                        if (first)
+                            first = false;
+                        else
+                            AppendNoLine(m_Accumulator, 0, " && ");
+                        AppendNoLine(
+                            m_Accumulator,
+                            0,
+                            "ctx.IsFlagSet((int)"
+                                + $"{EditorConstants.k_RoutineFlagEnum}.{entryFlag})"
+                        );
                     }
                     AppendLine(m_Accumulator, 0, ")");
                 }
@@ -203,7 +211,8 @@ namespace GameScript
                 for (int j = 0; j < splits.Length; j++)
                 {
                     string trimmed = splits[j].TrimEnd();
-                    if (string.IsNullOrEmpty(trimmed)) continue;
+                    if (string.IsNullOrEmpty(trimmed))
+                        continue;
                     AppendLine(m_Accumulator, 2, trimmed + ';');
                 }
                 AppendLine(m_Accumulator, 2, $"ctx.SetBlockExecuted({i});");
@@ -212,8 +221,11 @@ namespace GameScript
                 AppendLine(m_Accumulator, 1, "{");
                 foreach (string exitFlag in scheduledBlock.ExitFlags)
                 {
-                    AppendLine(m_Accumulator, 2,
-                        $"ctx.SetFlag((int){EditorConstants.k_RoutineFlagEnum}.{exitFlag});");
+                    AppendLine(
+                        m_Accumulator,
+                        2,
+                        $"ctx.SetFlag((int){EditorConstants.k_RoutineFlagEnum}.{exitFlag});"
+                    );
                 }
                 AppendLine(m_Accumulator, 1, "}");
 
@@ -225,7 +237,8 @@ namespace GameScript
 
         #region Scheduled Blocks
         private void HandleScheduledBlockOpen(
-            CSharpRoutineParser.Scheduled_block_openContext scheduledBlockOpenContext)
+            CSharpRoutineParser.Scheduled_block_openContext scheduledBlockOpenContext
+        )
         {
             // Sanity
             if (m_IsCondition)
@@ -242,7 +255,8 @@ namespace GameScript
         }
 
         private void HandleScheduledBlockClose(
-            CSharpRoutineParser.Scheduled_block_closeContext scheduledBlockCloseContext)
+            CSharpRoutineParser.Scheduled_block_closeContext scheduledBlockCloseContext
+        )
         {
             // Sanity
             if (m_IsCondition)
@@ -252,12 +266,17 @@ namespace GameScript
 
             // Add flags to block
             AddFlagListToBlock(
-                scheduledBlockCloseContext.flag_list(), m_ScheduledBlocks[^1], false);
+                scheduledBlockCloseContext.flag_list(),
+                m_ScheduledBlocks[^1],
+                false
+            );
         }
 
         private void AddFlagListToBlock(
-            CSharpRoutineParser.Flag_listContext flagList, ScheduledBlockBuilder builder,
-            bool isEntry)
+            CSharpRoutineParser.Flag_listContext flagList,
+            ScheduledBlockBuilder builder,
+            bool isEntry
+        )
         {
             if (flagList != null && flagList.ChildCount > 0)
             {
@@ -267,19 +286,23 @@ namespace GameScript
                     if (flagList.children[i] is not ITerminalNode identifier)
                     {
                         throw new Exception(
-                            "Scheduled block flag list must be a comma separated list");
+                            "Scheduled block flag list must be a comma separated list"
+                        );
                     }
 
                     // Grab flag name and skip commas
                     string flag = identifier.GetText();
-                    if (flag == ",") continue;
+                    if (flag == ",")
+                        continue;
 
                     // Add flag to flag cache
                     m_FlagCache.Add(flag);
 
                     // Add flag to scheduled block builder (idempotent)
-                    if (isEntry) builder.EntryFlags.Add(flag);
-                    else builder.ExitFlags.Add(flag);
+                    if (isEntry)
+                        builder.EntryFlags.Add(flag);
+                    else
+                        builder.ExitFlags.Add(flag);
                 }
             }
         }
@@ -313,12 +336,14 @@ namespace GameScript
                         break;
                 }
             }
-            else throw new Exception("Encountered literal with multiple children");
+            else
+                throw new Exception("Encountered literal with multiple children");
         }
 
         private void EnsureNotCondition(string errorMessage)
         {
-            if (m_IsCondition) throw new Exception(errorMessage);
+            if (m_IsCondition)
+                throw new Exception(errorMessage);
         }
         #endregion
 
@@ -333,7 +358,7 @@ namespace GameScript
         }
         #endregion
 
-        #region Helper - Classes/Structs 
+        #region Helper - Classes/Structs
         private class ScheduledBlockBuilder
         {
             public int ScheduledBlockID { get; private set; }

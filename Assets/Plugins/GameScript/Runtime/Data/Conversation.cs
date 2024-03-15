@@ -3,11 +3,13 @@ using System;
 namespace GameScript
 {
     [Serializable]
-    public class Conversation
+    public class Conversation : IComparable<Conversation>
     {
-        public uint id;
-        public string name;
-        public Node rootNode;
-        public Node[] nodes;
+        public uint Id;
+        public string Name;
+        public Node RootNode;
+        public Node[] Nodes;
+
+        public int CompareTo(Conversation other) => Id.CompareTo(other.Id);
     }
 }

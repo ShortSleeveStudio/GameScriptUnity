@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using Mono.Data.Sqlite;
-using UnityEngine;
-using UnityEditor;
 using System.IO;
+using Mono.Data.Sqlite;
+using UnityEditor;
+using UnityEngine;
+using static GameScript.DbHelper;
 using static GameScript.StringWriter;
-using static GameScript.Database;
 
 namespace GameScript
 {
@@ -18,7 +18,10 @@ namespace GameScript
          * contains the "noop" Action used for all empty/null routines.
          */
         public static TranspilerResult Transpile(
-            string sqliteDatabasePath, string routineOutputDirectory, string flagOutputDirectory)
+            string sqliteDatabasePath,
+            string routineOutputDirectory,
+            string flagOutputDirectory
+        )
         {
             // Create flag cache
             TranspilerResult transpilerResult = new TranspilerResult();
@@ -43,7 +46,8 @@ namespace GameScript
                     using (SqliteCommand command = connection.CreateCommand())
                     {
                         command.CommandType = CommandType.Text;
-                        command.CommandText = $"SELECT * FROM {Routines.TABLE_NAME} "
+                        command.CommandText =
+                            $"SELECT * FROM {Routines.TABLE_NAME} "
                             + $"WHERE type = '{(int)RoutineType.Import}';";
                         using (SqliteDataReader reader = command.ExecuteReader())
                         {
@@ -63,23 +67,28 @@ namespace GameScript
 
                     // Fetch row count
                     long routineCount = 0;
-                    string routineWhereClause = $"WHERE code IS NOT NULL "
+                    string routineWhereClause =
+                        $"WHERE code IS NOT NULL "
                         + $"AND code != '' "
                         + $"AND type != '{RoutineType.Import}'";
                     using (SqliteCommand command = connection.CreateCommand())
                     {
                         command.CommandType = CommandType.Text;
-                        command.CommandText = $"SELECT COUNT(*) as count "
+                        command.CommandText =
+                            $"SELECT COUNT(*) as count "
                             + $"FROM {Routines.TABLE_NAME} {routineWhereClause};";
                         using (SqliteDataReader reader = command.ExecuteReader())
                         {
-                            while (reader.Read()) routineCount = reader.GetInt64(0);
+                            while (reader.Read())
+                                routineCount = reader.GetInt64(0);
                         }
                     }
 
                     // Fetch all routines
                     routinePath = Path.Combine(
-                        routineOutputDirectory, $"{EditorConstants.k_RoutineInitializerClass}.cs");
+                        routineOutputDirectory,
+                        $"{EditorConstants.k_RoutineInitializerClass}.cs"
+                    );
                     using (StreamWriter writer = new StreamWriter(routinePath))
                     {
                         writer.NewLine = "\n";
@@ -88,26 +97,41 @@ namespace GameScript
                         WriteLine(writer, 0, "");
                         WriteLine(writer, 0, $"namespace {RuntimeConstants.k_AppName}");
                         WriteLine(writer, 0, "{");
-                        WriteLine(writer, 1,
-                            $"public static class {EditorConstants.k_RoutineInitializerClass}");
+                        WriteLine(
+                            writer,
+                            1,
+                            $"public static class {EditorConstants.k_RoutineInitializerClass}"
+                        );
                         WriteLine(writer, 1, "{");
-                        WriteLine(writer, 2, "[UnityEngine.RuntimeInitializeOnLoadMethod("
-                            + "UnityEngine.RuntimeInitializeLoadType.BeforeSplashScreen)]");
+                        WriteLine(
+                            writer,
+                            2,
+                            "[UnityEngine.RuntimeInitializeOnLoadMethod("
+                                + "UnityEngine.RuntimeInitializeLoadType.BeforeSplashScreen)]"
+                        );
                         WriteLine(writer, 2, $"private static void Initialize()");
                         WriteLine(writer, 2, "{");
                         // +1 for noop
-                        WriteLine(writer, 3, $"RoutineDirectory.Directory "
-                            + $"= new System.Action<ConversationContext>[{routineCount + 1}];");
+                        WriteLine(
+                            writer,
+                            3,
+                            $"RoutineDirectory.Directory "
+                                + $"= new System.Action<ConversationContext>[{routineCount + 1}];"
+                        );
 
                         // Write Routines
                         uint currentIndex = 0;
                         for (uint i = 0; i < routineCount; i += EditorConstants.k_SqlBatchSize)
                         {
                             Progress.Report(
-                                progressId, (float)i / routineCount, "Transpiling routines");
+                                progressId,
+                                (float)i / routineCount,
+                                "Transpiling routines"
+                            );
                             uint limit = EditorConstants.k_SqlBatchSize;
                             uint offset = i;
-                            string query = $"SELECT * FROM {Routines.TABLE_NAME} "
+                            string query =
+                                $"SELECT * FROM {Routines.TABLE_NAME} "
                                 + $"{routineWhereClause} "
                                 + $"ORDER BY id ASC LIMIT {limit} OFFSET {offset};";
                             using (SqliteCommand command = connection.CreateCommand())
@@ -130,23 +154,33 @@ namespace GameScript
                                             case (int)RoutineType.User:
                                             case (int)RoutineType.Default:
                                                 WriteRoutine(
-                                                    routine, writer, flagCache, currentIndex,
-                                                    routineIdToIndex);
+                                                    routine,
+                                                    writer,
+                                                    flagCache,
+                                                    currentIndex,
+                                                    routineIdToIndex
+                                                );
                                                 break;
                                             case (int)RoutineType.Import:
                                                 if (routine.id != 1)
                                                 {
                                                     throw new Exception(
-                                                        "Import routine id was not 0 as expected");
+                                                        "Import routine id was not 0 as expected"
+                                                    );
                                                 }
                                                 WriteRoutine(
-                                                    new() { id = routine.id, code = "" }, writer,
-                                                    flagCache, currentIndex, routineIdToIndex);
+                                                    new() { id = routine.id, code = "" },
+                                                    writer,
+                                                    flagCache,
+                                                    currentIndex,
+                                                    routineIdToIndex
+                                                );
                                                 break;
                                             default:
                                                 throw new Exception(
                                                     $"Unknown routine type encountered: "
-                                                        + routine.type);
+                                                        + routine.type
+                                                );
                                         }
                                     }
                                 }
@@ -188,12 +222,19 @@ namespace GameScript
 
         #region Helpers
         static void WriteRoutine(
-            Routines routine, StreamWriter writer, HashSet<string> flagCache, uint methodIndex,
-            Dictionary<uint, uint> routineIdToIndex)
+            Routines routine,
+            StreamWriter writer,
+            HashSet<string> flagCache,
+            uint methodIndex,
+            Dictionary<uint, uint> routineIdToIndex
+        )
         {
             routineIdToIndex.Add((uint)routine.id, methodIndex);
-            WriteLine(writer, 3,
-                $"RoutineDirectory.Directory[{methodIndex}] = (ConversationContext ctx) =>");
+            WriteLine(
+                writer,
+                3,
+                $"RoutineDirectory.Directory[{methodIndex}] = (ConversationContext ctx) =>"
+            );
             WriteLine(writer, 3, "{");
             try
             {
@@ -218,7 +259,8 @@ namespace GameScript
         static void WriteFlags(string outputDirectory, HashSet<string> flagCache)
         {
             string path = Path.Combine(outputDirectory, $"{EditorConstants.k_RoutineFlagEnum}.cs");
-            if (File.Exists(path)) File.Delete(path);
+            if (File.Exists(path))
+                File.Delete(path);
             using (StreamWriter writer = new StreamWriter(path))
             {
                 writer.NewLine = "\n";
