@@ -27,9 +27,18 @@ namespace GameScript
 
         public static string Transpile(Routines routine, HashSet<string> flagCache)
         {
+            // Trim and special case empty
+            string code = routine.code.Trim();
+            if (code.Length == 0)
+            {
+                if (!routine.isCondition)
+                    return "";
+                return "ctx.SetConditionResult(true);";
+            }
+
             // Create parser
             TranspileErrorListener errorListener = new();
-            ICharStream stream = CharStreams.fromString(routine.code.Trim());
+            ICharStream stream = CharStreams.fromString(code);
             CSharpRoutineLexer lexer = new CSharpRoutineLexer(stream);
             ITokenStream tokens = new CommonTokenStream(lexer);
             CSharpRoutineParser parser = new(tokens) { BuildParseTree = true, };

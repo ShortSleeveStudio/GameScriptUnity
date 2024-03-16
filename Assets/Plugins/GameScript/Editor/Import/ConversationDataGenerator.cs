@@ -284,26 +284,26 @@ namespace GameScript
                     // Note:
                     // If these don't exist in the map, it means they were noop routines. Moreover,
                     // if these were null (for root nodes), they'd default to 0 and not exist in the
-                    // map. For either of these cases, we set the value to 0 because that's where the
-                    // noop routine lives. It's actually the "import" routine since that must
-                    // always be the first routine the DB by convention.
+                    // map. For either of these cases, we explicitly set them to the noop code and
+                    // condition routines.
                     uint condition = routineIdToIndex.ContainsKey((uint)node.condition)
                         ? routineIdToIndex[(uint)node.condition]
-                        : 0;
+                        : routineIdToIndex[EditorConstants.k_NoopRoutineConditionId];
                     // Handle default routines
                     if (node.codeOverride != 0)
                         node.code = node.codeOverride;
                     uint code = routineIdToIndex.ContainsKey((uint)node.code)
                         ? routineIdToIndex[(uint)node.code]
-                        : 0;
-                    Node diskNode = new Node()
-                    {
-                        Id = (uint)node.id,
-                        Actor = idToActor[(uint)node.actor],
-                        Condition = condition,
-                        Code = code,
-                        IsPreventResponse = node.isPreventResponse,
-                    };
+                        : routineIdToIndex[EditorConstants.k_NoopRoutineCodeId];
+                    Node diskNode =
+                        new()
+                        {
+                            Id = (uint)node.id,
+                            Actor = idToActor[(uint)node.actor],
+                            Condition = condition,
+                            Code = code,
+                            IsPreventResponse = node.isPreventResponse,
+                        };
 
                     // Note: Root nodes don't have localizations or code.
                     if (node.type == "root")

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace GameScript
@@ -9,12 +10,13 @@ namespace GameScript
     public delegate void OnDecisionMade(Node node);
 
     /**Runner listeners can react to changes in conversation runner state.*/
-    public interface RunnerListener
+    public interface IRunnerListener
     {
         public void OnConversationEnter(Conversation conversation, OnReady onReady);
         public void OnNodeEnter(Node node, OnReady onReady);
         public void OnNodeDecision(List<Node> nodes, OnDecisionMade onDecisionMade);
         public void OnNodeExit(Node node, OnReady onReady);
         public void OnConversationExit(Conversation conversation, OnReady onReady);
+        public void OnError(Conversation conversation, Exception e);
     }
 }

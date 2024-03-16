@@ -70,7 +70,7 @@ namespace GameScript
                     string routineWhereClause =
                         $"WHERE code IS NOT NULL "
                         + $"AND code != '' "
-                        + $"AND type != '{RoutineType.Import}'";
+                        + $"AND type != {(int)RoutineType.Import}";
                     using (SqliteCommand command = connection.CreateCommand())
                     {
                         command.CommandType = CommandType.Text;
@@ -115,13 +115,41 @@ namespace GameScript
                         WriteLine(
                             writer,
                             3,
-                            $"RoutineDirectory.Directory "
-                                + $"= new System.Action<ConversationContext>[{routineCount + 1}];"
+                            $"RoutineDirectory.Directory = new System.Action<"
+                                + $"{EditorConstants.k_ContextClass}>[{routineCount + 1}];"
                         );
 
-                        // Write Routines
+                        // Write Noop Routine - Code
+                        WriteRoutine(
+                            new Routines() { id = EditorConstants.k_NoopRoutineCodeId, code = "" },
+                            writer,
+                            flagCache,
+                            0,
+                            routineIdToIndex
+                        );
+
+                        // Write Noop Routine - Condition
+                        WriteRoutine(
+                            new Routines()
+                            {
+                                id = EditorConstants.k_NoopRoutineConditionId,
+                                code = "",
+                                isCondition = true,
+                            },
+                            writer,
+                            flagCache,
+                            1,
+                            routineIdToIndex
+                        );
+
+                        // Write All Other Routines
                         uint currentIndex = 0;
-                        for (uint i = 0; i < routineCount; i += EditorConstants.k_SqlBatchSize)
+                        for (
+                            // account for noops
+                            uint i = 2;
+                            i < routineCount;
+                            i += EditorConstants.k_SqlBatchSize
+                        )
                         {
                             Progress.Report(
                                 progressId,
@@ -161,24 +189,9 @@ namespace GameScript
                                                     routineIdToIndex
                                                 );
                                                 break;
-                                            case (int)RoutineType.Import:
-                                                if (routine.id != 1)
-                                                {
-                                                    throw new Exception(
-                                                        "Import routine id was not 0 as expected"
-                                                    );
-                                                }
-                                                WriteRoutine(
-                                                    new() { id = routine.id, code = "" },
-                                                    writer,
-                                                    flagCache,
-                                                    currentIndex,
-                                                    routineIdToIndex
-                                                );
-                                                break;
                                             default:
                                                 throw new Exception(
-                                                    $"Unknown routine type encountered: "
+                                                    $"Unexpected routine type encountered: "
                                                         + routine.type
                                                 );
                                         }
@@ -187,7 +200,7 @@ namespace GameScript
                             }
                         }
 
-                        WriteLine(writer, 2, "}"); // Static block
+                        WriteLine(writer, 2, "}"); // Initialize
                         WriteLine(writer, 1, "}"); // Class
                         WriteLine(writer, 0, "}"); // Namespace
                     }
@@ -233,7 +246,8 @@ namespace GameScript
             WriteLine(
                 writer,
                 3,
-                $"RoutineDirectory.Directory[{methodIndex}] = (ConversationContext ctx) =>"
+                $"RoutineDirectory.Directory[{methodIndex}] "
+                    + $"= ({EditorConstants.k_ContextClass} ctx) =>"
             );
             WriteLine(writer, 3, "{");
             try
@@ -244,6 +258,8 @@ namespace GameScript
                     string[] lines = generatedCode.Split("\n");
                     for (int i = 0; i < lines.Length; i++)
                     {
+                        if (lines[i].Length == 0)
+                            continue;
                         WriteLine(writer, 4, lines[i]);
                     }
                 }

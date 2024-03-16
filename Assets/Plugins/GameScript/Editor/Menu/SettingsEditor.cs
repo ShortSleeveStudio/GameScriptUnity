@@ -10,9 +10,6 @@ namespace GameScript
     [CustomEditor(typeof(Settings))]
     public class SettingsEditor : Editor
     {
-        #region Constants
-
-        #endregion
         #region Variables
         [SerializeField]
         private VisualTreeAsset m_SettingsXML;

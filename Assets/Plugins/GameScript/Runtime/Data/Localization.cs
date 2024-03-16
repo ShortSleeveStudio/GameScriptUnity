@@ -7,5 +7,7 @@ namespace GameScript
     {
         public uint Id;
         public string[] Localizations; // Lookup with Locale.Index
+
+        public string GetLocalization(Locale locale) => Localizations[locale.Index];
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,7 +21,7 @@ namespace GameScript
         #endregion
 
         #region Singleton
-        public static Runner Instance { get; private set; }
+        private static Runner Instance { get; set; }
         #endregion
 
         #region Private State
@@ -43,17 +44,17 @@ namespace GameScript
 
         #region API
         /**Start a conversation and return the cancellation token*/
-        public uint StartConversation(uint conversationId, RunnerListener listener)
+        public static uint StartConversation(uint conversationId, IRunnerListener listener)
         {
-            RunnerContext context = ContextAcquire();
+            RunnerContext context = Instance.ContextAcquire();
             Conversation conversation = Database.FindConversation(conversationId);
             context.Start(conversation, listener);
             return context.ContextId;
         }
 
         /**Stop a conversation you previously started using a cancellation token*/
-        public void StopConversation(uint cancellationToken) =>
-            ContextRelease(FindContextActive(cancellationToken));
+        public static void StopConversation(uint cancellationToken) =>
+            Instance.ContextRelease(Instance.FindContextActive(cancellationToken));
         #endregion
 
         #region Unity Lifecycle Methods
@@ -97,10 +98,9 @@ namespace GameScript
                 iterator = iterator.Next;
 
                 // Handle current context
-                if (!runnerContext.Tick())
-                {
+                bool isConversationActive = runnerContext.Tick();
+                if (!isConversationActive)
                     ContextRelease(runnerContext);
-                }
             } while (iterator != null);
         }
         #endregion
