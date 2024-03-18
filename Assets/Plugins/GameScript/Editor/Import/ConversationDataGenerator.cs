@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using Mono.Data.Sqlite;
+using NUnit.Framework.Internal;
 using UnityEditor;
 using UnityEngine;
 
@@ -93,13 +94,18 @@ namespace GameScript
             return disk;
         }
 
-        /**We only care about non-system created localizations*/
+        /**
+         * We only care about non-system created localizations, but we're also populating the global
+         * lookup table. Furthermore, we won't be retaining empty localizations that are system
+         * created. We'll keep empty user-created localizations just so they don't get any
+         * surprises.
+         */
         static Localization[] SerializeLocalizations(
             SqliteConnection connection,
             Dictionary<uint, Localization> idToLocalization
         )
         {
-            Localization[] localizations = null;
+            List<Localization> localizationList = new();
 
             // Grab locale fields
             List<FieldInfo> localizationFields = new();
@@ -116,20 +122,22 @@ namespace GameScript
             ReadTable(
                 connection,
                 Localizations.TABLE_NAME,
-                (uint count) =>
-                {
-                    localizations = new Localization[count];
-                },
+                null,
                 (uint index, SqliteDataReader reader) =>
                 {
                     Localizations localization = Localizations.FromReader(reader);
 
-                    // Grab list of localized string in order of locale id
+                    // Grab list of localized string in order of locale id, remeber if all strings
+                    // are empty
+                    bool allEmpty = true;
                     string[] localizationStrings = new string[localizationFields.Count];
                     for (int j = 0; j < localizationFields.Count; j++)
                     {
                         FieldInfo info = localizationFields[j];
-                        localizationStrings[j] = (string)info.GetValue(localization);
+                        string localizationString = (string)info.GetValue(localization);
+                        if (!string.IsNullOrEmpty(localizationString))
+                            allEmpty = false;
+                        localizationStrings[j] = localizationString;
                     }
 
                     // Create disk localization
@@ -137,16 +145,16 @@ namespace GameScript
                         new() { Id = (uint)localization.id, Localizations = localizationStrings, };
 
                     // Add disk localization to lookup table
-                    idToLocalization.Add(diskLocalization.Id, diskLocalization);
+                    idToLocalization.Add(diskLocalization.Id, allEmpty ? null : diskLocalization);
 
                     // Add localization to list (if this is non-system created)
                     if (!localization.isSystemCreated)
                     {
-                        localizations[index] = diskLocalization;
+                        localizationList.Add(diskLocalization);
                     }
                 }
             );
-            return localizations;
+            return localizationList.ToArray();
         }
 
         static Locale[] SerializeLocales(
@@ -442,7 +450,8 @@ namespace GameScript
                         count = (uint)reader.GetInt64(0);
                 }
             }
-            onCount(count);
+            if (onCount != null)
+                onCount(count);
 
             // Fetch all rows
             for (uint i = 0; i < count; i += EditorConstants.k_SqlBatchSize)
