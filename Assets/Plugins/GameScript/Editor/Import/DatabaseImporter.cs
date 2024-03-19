@@ -3,11 +3,12 @@ using System.Data;
 using System.IO;
 using System.Threading.Tasks;
 using Mono.Data.Sqlite;
+using UnityEditor;
 using UnityEngine;
 
 namespace GameScript
 {
-    public static class DatabaseImporter
+    static class DatabaseImporter
     {
         #region Constants
         private static readonly string k_DbCodeOutputDirectory = Path.Combine(
@@ -81,6 +82,7 @@ namespace GameScript
                 DbCodeGeneratorResult codeGenResult = default;
                 TranspilerResult transpilerResult = default;
                 ConversationDataGeneratorResult conversationResult = default;
+                ReferenceGeneratorResult assetResult = default;
                 await Task.Run(() =>
                 {
                     codeGenResult = DatabaseCodeGenerator.GenerateDatabaseCode(
@@ -102,11 +104,20 @@ namespace GameScript
                         transpilerResult.RoutineIdToIndex
                     );
                 });
+
                 if (
                     codeGenResult.WasError
                     || transpilerResult.WasError
                     || conversationResult.WasError
                 )
+                    return;
+
+                // Create asset references (must be main thread)
+                assetResult = ReferenceGenerator.GenerateAssetReferences(
+                    sqliteDatabasePath,
+                    routineOutputDirectory
+                );
+                if (assetResult.WasError)
                     return;
 
                 // Update Settings

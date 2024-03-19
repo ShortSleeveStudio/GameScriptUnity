@@ -7,7 +7,7 @@ using static GameScript.StringWriter;
 
 namespace GameScript
 {
-    public class TranspilingTreeWalker
+    class TranspilingTreeWalker
     {
         private bool m_IsBlock;
         private bool m_IsCondition;

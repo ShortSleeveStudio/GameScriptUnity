@@ -3,7 +3,7 @@ using System.Text;
 
 namespace GameScript
 {
-    public static class StringWriter
+    static class StringWriter
     {
         public static void WriteLine(StreamWriter writer, int depth, string toWrite) =>
             WriteNoLine(writer, depth, toWrite + '\n');

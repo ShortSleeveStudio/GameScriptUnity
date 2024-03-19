@@ -44,10 +44,20 @@ namespace GameScript
 
         #region API
         /**Start a conversation and return the cancellation token*/
+        public static uint StartConversation(
+            ConversationReference conversationRef,
+            IRunnerListener listener
+        ) => StartConversation(conversationRef.Id, listener);
+
         public static uint StartConversation(uint conversationId, IRunnerListener listener)
         {
-            RunnerContext context = Instance.ContextAcquire();
             Conversation conversation = Database.FindConversation(conversationId);
+            return StartConversation(conversation, listener);
+        }
+
+        public static uint StartConversation(Conversation conversation, IRunnerListener listener)
+        {
+            RunnerContext context = Instance.ContextAcquire();
             context.Start(conversation, listener);
             return context.ContextId;
         }

@@ -10,7 +10,7 @@ using static GameScript.StringWriter;
 
 namespace GameScript
 {
-    public class Transpiler
+    static class Transpiler
     {
         #region API
         /**

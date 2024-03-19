@@ -34,16 +34,23 @@ namespace GameScript
         #endregion
 
         #region Static State
-        private static Conversation m_BinarySearchDummy = new();
+        private static Locale m_BinarySearchLocale = new Locale();
+        private static Conversation m_BinarySearchConversation = new Conversation();
         #endregion
 
         #region Static Methods
-        public static Conversation FindConversation(uint conversationId)
+        public static Locale FindLocale(uint localeId) =>
+            Find(localeId, m_BinarySearchLocale, Instance.Locales);
+
+        public static Conversation FindConversation(uint conversationId) =>
+            Find(conversationId, m_BinarySearchConversation, Instance.Conversations);
+
+        private static T Find<T>(uint id, T searchBuddy, T[] arr)
+            where T : BaseData<T>
         {
-            GameData data = Instance;
-            m_BinarySearchDummy.Id = conversationId;
-            int index = Array.BinarySearch(data.Conversations, m_BinarySearchDummy);
-            return data.Conversations[index];
+            searchBuddy.Id = id;
+            int index = Array.BinarySearch(arr, searchBuddy);
+            return arr[index];
         }
         #endregion
     }

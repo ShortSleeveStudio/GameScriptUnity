@@ -1,7 +1,7 @@
 using System.IO;
 using Antlr4.Runtime;
 
-public class TranspileErrorListener : BaseErrorListener
+class TranspileErrorListener : BaseErrorListener
 {
     public int ErrorLine { get; private set; }
     public int ErrorColumn { get; private set; }

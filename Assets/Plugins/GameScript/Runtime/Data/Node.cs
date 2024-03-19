@@ -3,9 +3,8 @@ using System;
 namespace GameScript
 {
     [Serializable]
-    public class Node
+    public class Node : BaseData<Node>
     {
-        public uint Id;
         public Actor Actor;
         public Localization UIResponseText;
         public Localization VoiceText;

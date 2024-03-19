@@ -10,7 +10,7 @@ using static GameScript.StringWriter;
 
 namespace GameScript
 {
-    public static class DatabaseCodeGenerator
+    static class DatabaseCodeGenerator
     {
         public static DbCodeGeneratorResult GenerateDatabaseCode(
             string sqliteDatabasePath,
@@ -201,7 +201,7 @@ namespace GameScript
                     WriteLine(writer, 0, "");
                     WriteLine(writer, 0, $"namespace {RuntimeConstants.k_AppName}");
                     WriteLine(writer, 0, "{");
-                    WriteLine(writer, 1, $"public class {friendlyTableName}");
+                    WriteLine(writer, 1, $"class {friendlyTableName}");
                     WriteLine(writer, 1, "{");
                     // Table Name
                     WriteLine(writer, 2, $"public const string TABLE_NAME = \"{entry.Key}\";");

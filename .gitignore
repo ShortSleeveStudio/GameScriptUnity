@@ -74,3 +74,4 @@ crashlytics-build.properties
 # Conversation Data
 /[Aa]ssets/[Ss]treamingAssets
 /[Aa]ssets/GameScript
+/[Aa]ssets/Plugins/GameScript/Editor/Generated/SQLite
