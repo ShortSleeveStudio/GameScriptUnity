@@ -330,11 +330,11 @@ namespace GameScript
                 ITerminalNode terminalChild = (ITerminalNode)child;
                 switch (terminalChild.Symbol.Type)
                 {
-                    case CSharpRoutineParser.LESSOR:
-                        EnsureNotCondition("@lessor is not allowed in conditions");
+                    case CSharpRoutineParser.LEASE:
+                        EnsureNotCondition("@lease is not allowed in conditions");
                         int currentBlock = m_ScheduledBlocks.Count - 1;
                         ScheduledBlockBuilder block = m_ScheduledBlocks[currentBlock];
-                        AppendNoLine(block.Code, 0, $"ctx.AcquireLessor({currentBlock})");
+                        AppendNoLine(block.Code, 0, $"ctx.AcquireLease({currentBlock})");
                         break;
                     case CSharpRoutineParser.NODE:
                         EnsureNotCondition("@node is not allowed in conditions");

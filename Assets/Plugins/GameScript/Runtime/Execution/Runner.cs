@@ -81,6 +81,15 @@ namespace GameScript
             // else - we assume the conversation is already ended. Thus this call is idempotent.
         }
 
+        public static void StopAllConversations()
+        {
+            EnsureMainThread();
+            foreach (RunnerContext context in Instance.m_ContextsActive)
+            {
+                Instance.ContextRelease(context);
+            }
+        }
+
         private static void EnsureMainThread()
         {
             if (Instance.m_MainThread != Thread.CurrentThread)
@@ -169,10 +178,10 @@ namespace GameScript
 
         private RunnerContext FindContextActive(uint contextId)
         {
-            foreach (RunnerContext node in m_ContextsActive)
+            foreach (RunnerContext context in m_ContextsActive)
             {
-                if (node.ContextId == contextId)
-                    return node;
+                if (context.ContextId == contextId)
+                    return context;
             }
             return null;
         }

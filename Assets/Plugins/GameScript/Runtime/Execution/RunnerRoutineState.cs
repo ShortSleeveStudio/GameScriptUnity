@@ -47,7 +47,7 @@ namespace GameScript
 
         public void SetBlockExecuted(int blockIndex) => m_Blocks[blockIndex].SetExecuted();
 
-        public ILessor AcquireLessor(int blockIndex) => m_Blocks[blockIndex];
+        public Lease AcquireLease(int blockIndex) => m_Blocks[blockIndex].AcquireLease();
 
         public bool HaveBlockSignalsFired(int blockIndex) =>
             m_Blocks[blockIndex].HaveAllSignalsFired();

@@ -39,7 +39,7 @@ public partial class CSharpRoutineParser : Parser {
 		TYPE_BOOLEAN=1, TYPE_CHAR=2, TYPE_FLOAT_DEFAULT=3, TYPE_FLOAT32=4, TYPE_FLOAT64=5, 
 		TYPE_INT_DEFAULT=6, TYPE_INT8=7, TYPE_INT16=8, TYPE_INT32=9, TYPE_INT64=10, 
 		TYPE_UINT_DEFAULT=11, TYPE_UINT8=12, TYPE_UINT16=13, TYPE_UINT32=14, TYPE_UINT64=15, 
-		TYPE_STRING=16, NODE=17, LESSOR=18, BREAK=19, CASE=20, DEFAULT=21, IF=22, 
+		TYPE_STRING=16, NODE=17, LEASE=18, BREAK=19, CASE=20, DEFAULT=21, IF=22, 
 		ELSE=23, SWITCH=24, INTEGER_LITERAL=25, FLOATING_POINT_LITERAL=26, BOOLEAN_LITERAL=27, 
 		CHARACTER_LITERAL=28, STRING_LITERAL=29, NULL_LITERAL=30, LPAREN=31, RPAREN=32, 
 		LBRACE=33, RBRACE=34, LBRACK=35, RBRACK=36, SEMI=37, COMMA=38, DOT=39, 
@@ -70,7 +70,7 @@ public partial class CSharpRoutineParser : Parser {
 	private static readonly string[] _LiteralNames = {
 		null, "'bool'", "'char'", "'float'", "'float32'", "'float64'", "'int'", 
 		"'int8'", "'int16'", "'int32'", "'int64'", "'uint'", "'uint8'", "'uint16'", 
-		"'uint32'", "'uint64'", "'string'", "'@node'", "'@lessor'", "'break'", 
+		"'uint32'", "'uint64'", "'string'", "'@node'", "'@lease'", "'break'", 
 		"'case'", "'default'", "'if'", "'else'", "'switch'", null, null, null, 
 		null, null, "'null'", "'('", "')'", "'{'", "'}'", "'['", "']'", "';'", 
 		"','", "'.'", "':'", "'::'", "'='", "'+='", "'-='", "'*='", "'/='", "'&='", 
@@ -82,7 +82,7 @@ public partial class CSharpRoutineParser : Parser {
 		null, "TYPE_BOOLEAN", "TYPE_CHAR", "TYPE_FLOAT_DEFAULT", "TYPE_FLOAT32", 
 		"TYPE_FLOAT64", "TYPE_INT_DEFAULT", "TYPE_INT8", "TYPE_INT16", "TYPE_INT32", 
 		"TYPE_INT64", "TYPE_UINT_DEFAULT", "TYPE_UINT8", "TYPE_UINT16", "TYPE_UINT32", 
-		"TYPE_UINT64", "TYPE_STRING", "NODE", "LESSOR", "BREAK", "CASE", "DEFAULT", 
+		"TYPE_UINT64", "TYPE_STRING", "NODE", "LEASE", "BREAK", "CASE", "DEFAULT", 
 		"IF", "ELSE", "SWITCH", "INTEGER_LITERAL", "FLOATING_POINT_LITERAL", "BOOLEAN_LITERAL", 
 		"CHARACTER_LITERAL", "STRING_LITERAL", "NULL_LITERAL", "LPAREN", "RPAREN", 
 		"LBRACE", "RBRACE", "LBRACK", "RBRACK", "SEMI", "COMMA", "DOT", "COLON", 
@@ -2684,7 +2684,7 @@ public partial class CSharpRoutineParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode STRING_LITERAL() { return GetToken(CSharpRoutineParser.STRING_LITERAL, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NULL_LITERAL() { return GetToken(CSharpRoutineParser.NULL_LITERAL, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NODE() { return GetToken(CSharpRoutineParser.NODE, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LESSOR() { return GetToken(CSharpRoutineParser.LESSOR, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LEASE() { return GetToken(CSharpRoutineParser.LEASE, 0); }
 		public LiteralContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{

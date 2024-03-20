@@ -271,7 +271,7 @@ namespace GameScript
 
         public void SetBlockExecuted(int blockIndex) => m_RoutineState.SetBlockExecuted(blockIndex);
 
-        public ILessor AcquireLessor(int blockIndex) => m_RoutineState.AcquireLessor(blockIndex);
+        public Lease AcquireLease(int blockIndex) => m_RoutineState.AcquireLease(blockIndex);
 
         public bool HaveBlockSignalsFired(int blockIndex) =>
             m_RoutineState.HaveBlockSignalsFired(blockIndex);

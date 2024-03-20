@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace GameScript
 {
-    class RunnerScheduledBlock : ILessor
+    class RunnerScheduledBlock
     {
         private const int k_InitialSignalPool = 8; // Conservative guess
         private List<SignalData> m_Signals;
@@ -20,8 +20,7 @@ namespace GameScript
             m_CurrentSignal = 0;
         }
 
-        #region ILessor
-        public Lease Acquire()
+        public Lease AcquireLease()
         {
             int currentSignal = m_CurrentSignal++;
             EnsurePoolSize(m_CurrentSignal);
@@ -31,7 +30,6 @@ namespace GameScript
                 m_Signals[currentSignal].Signal
             );
         }
-        #endregion
 
         public bool HasExecuted() => m_Executed;
 

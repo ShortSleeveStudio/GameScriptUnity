@@ -1,12 +1,5 @@
-using UnityEngine;
-
 namespace GameScript
 {
-    public interface ILessor
-    {
-        public Lease Acquire();
-    }
-
     public struct Lease
     {
         private bool m_Signalled;
