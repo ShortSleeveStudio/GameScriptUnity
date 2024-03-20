@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using GameScript;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
 
 public class ConversationUI : MonoBehaviour, IRunnerListener
 {
@@ -34,29 +33,42 @@ public class ConversationUI : MonoBehaviour, IRunnerListener
 
     #region State
     private Action<ConversationUI> m_OnComplete;
+    private ActiveConversation m_ActiveConversation;
     #endregion
 
     #region Initialization
-    public void Initialize(Action<ConversationUI> onComplete) => m_OnComplete = onComplete;
+    public void Initialize(uint conversationId, Action<ConversationUI> onComplete)
+    {
+        m_OnComplete = onComplete;
+        m_ActiveConversation = Runner.StartConversation(conversationId, this);
+    }
+    #endregion
+
+    #region Handlers
+    public void Stop()
+    {
+        Runner.StopConversation(m_ActiveConversation);
+        m_OnComplete(this);
+    }
     #endregion
 
     #region Runner Listerner
-    public void OnConversationEnter(Conversation conversation, OnReady onReady)
+    public void OnConversationEnter(Conversation conversation, ReadyNotifier readyNotifier)
     {
-        onReady();
+        readyNotifier.OnReady();
     }
 
-    public void OnConversationExit(Conversation conversation, OnReady onReady)
+    public void OnConversationExit(Conversation conversation, ReadyNotifier readyNotifier)
     {
         for (int i = m_HistoryContent.transform.childCount - 1; i >= 0; i--)
         {
             Destroy(m_HistoryContent.transform.GetChild(i).gameObject);
         }
-        onReady();
+        readyNotifier.OnReady();
         m_OnComplete(this);
     }
 
-    public void OnNodeDecision(List<Node> nodes, OnDecisionMade onDecisionMade)
+    public void OnNodeDecision(List<Node> nodes, DecisionNotifier decisionNotifier)
     {
         for (int i = 0; i < nodes.Count; i++)
         {
@@ -69,13 +81,13 @@ public class ConversationUI : MonoBehaviour, IRunnerListener
             choiceUI.SetButtonText(buttonText);
             choiceUI.RegisterButtonHandler(() =>
             {
-                onDecisionMade(node);
+                decisionNotifier.OnDecisionMade(node);
             });
             choiceGO.transform.SetParent(m_ChoiceContent.transform);
         }
     }
 
-    public void OnNodeEnter(Node node, OnReady onReady)
+    public void OnNodeEnter(Node node, ReadyNotifier readyNotifier)
     {
         if (node.VoiceText != null)
         {
@@ -88,30 +100,29 @@ public class ConversationUI : MonoBehaviour, IRunnerListener
             historyItem.SetVoiceText(voiceText);
             historyItem.SetActorName(actorName);
             historyItemGO.transform.SetParent(m_HistoryContent.transform);
-            // m_HistoryScrollRect.normalizedPosition = Vector2.zero;
-            Delay(k_ReadTimeMillis, onReady);
+            Delay(k_ReadTimeMillis, readyNotifier);
         }
         else
-            onReady();
+            readyNotifier.OnReady();
     }
 
-    public void OnNodeExit(Node node, OnReady onReady)
+    public void OnNodeExit(Node node, ReadyNotifier readyNotifier)
     {
         for (int i = m_ChoiceContent.transform.childCount - 1; i >= 0; i--)
         {
             Destroy(m_ChoiceContent.transform.GetChild(i).gameObject);
         }
-        onReady();
+        readyNotifier.OnReady();
     }
 
     public void OnError(Conversation conversation, Exception e) => Debug.LogException(e);
     #endregion
 
     #region Helpers
-    private async void Delay(int millis, OnReady onReady)
+    private async void Delay(int millis, ReadyNotifier readyNotifier)
     {
         await Task.Delay(millis);
-        onReady();
+        readyNotifier.OnReady();
     }
     #endregion
 }

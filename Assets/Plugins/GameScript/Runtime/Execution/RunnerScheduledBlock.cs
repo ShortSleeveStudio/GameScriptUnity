@@ -2,15 +2,17 @@ using System.Collections.Generic;
 
 namespace GameScript
 {
-    class RunnerScheduledBlock
+    class RunnerScheduledBlock : ILessor
     {
         private const int k_InitialSignalPool = 8; // Conservative guess
         private List<SignalData> m_Signals;
         private int m_CurrentSignal;
         private bool m_Executed;
+        private RunnerContext m_RunnerContext;
 
-        public RunnerScheduledBlock()
+        public RunnerScheduledBlock(RunnerContext runnerContext)
         {
+            m_RunnerContext = runnerContext;
             m_Signals = new(k_InitialSignalPool);
             EnsurePoolSize(k_InitialSignalPool);
 
@@ -18,16 +20,22 @@ namespace GameScript
             m_CurrentSignal = 0;
         }
 
-        public bool HasExecuted() => m_Executed;
-
-        public void SetExecuted() => m_Executed = true;
-
-        public Signal AcquireSignal()
+        #region ILessor
+        public Lease Acquire()
         {
             int currentSignal = m_CurrentSignal++;
             EnsurePoolSize(m_CurrentSignal);
-            return m_Signals[currentSignal].Signal;
+            return new(
+                m_RunnerContext.SequenceNumber,
+                m_RunnerContext,
+                m_Signals[currentSignal].Signal
+            );
         }
+        #endregion
+
+        public bool HasExecuted() => m_Executed;
+
+        public void SetExecuted() => m_Executed = true;
 
         public bool HaveAllSignalsFired()
         {

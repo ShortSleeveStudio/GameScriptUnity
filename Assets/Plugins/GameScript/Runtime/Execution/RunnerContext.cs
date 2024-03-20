@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace GameScript
 {
@@ -10,41 +9,50 @@ namespace GameScript
         private const int k_DefaultEdgeCapacity = 16;
         #endregion
 
-        public uint ContextId { get; private set; }
+        #region Static
+        // 0 is reserved to represent uninitialized state
+        private static uint s_NextContextId = 1;
 
-        private static uint s_NextContextId = 0;
+        // 0 is reserved to represent uninitialized state
+        private static uint s_NextSequenceNumber = 1;
+        #endregion
+
+        public uint ContextId { get; private set; }
+        public uint SequenceNumber { get; private set; }
+
         private RunnerRoutineState m_RoutineState;
         private Conversation m_Conversation;
         private Node m_Node;
         private IRunnerListener m_Listener;
         private bool m_OnReadyCalled;
-        private OnReady m_OnReady;
+        private Action m_OnReady;
         private Node m_OnDecisionMadeValue;
         private bool m_OnDecisionMadeCalled;
-        private OnDecisionMade m_OnDecisionMade;
+        private Action<Node> m_OnDecisionMade;
         private MachineState m_CurrentState;
         private List<Node> m_AvailableNodes;
 
-        public RunnerContext(Settings settings)
+        internal RunnerContext(Settings settings)
         {
+            ContextId = s_NextContextId++;
             m_OnReady = OnReady;
-            ContextId = s_NextContextId;
             m_CurrentState = MachineState.Idle;
             m_OnDecisionMade = OnDecisionMade;
-            m_RoutineState = new(settings.MaxFlags);
+            m_RoutineState = new(settings.MaxFlags, this);
             m_AvailableNodes = new(k_DefaultEdgeCapacity);
         }
 
         #region Execution
-        public void Start(Conversation conversation, IRunnerListener listener)
+        internal void Start(Conversation conversation, IRunnerListener listener)
         {
             m_Node = conversation.RootNode;
             m_Listener = listener;
             m_Conversation = conversation;
             m_CurrentState = MachineState.ConversationEnter;
+            SequenceNumber = s_NextSequenceNumber++;
         }
 
-        public void Stop()
+        internal void Stop()
         {
             // Since this is only called by Runner, we don't necessarily have to go though
             // OnConversationExit. Runner will already place this context back into the inactive
@@ -54,7 +62,7 @@ namespace GameScript
         }
 
         /**Returns if the conversation is active*/
-        public bool Tick()
+        internal bool Tick()
         {
             try
             {
@@ -66,7 +74,10 @@ namespace GameScript
                     }
                     case MachineState.ConversationEnter:
                     {
-                        m_Listener.OnConversationEnter(m_Conversation, m_OnReady);
+                        m_Listener.OnConversationEnter(
+                            m_Conversation,
+                            new(SequenceNumber, this, m_OnReady)
+                        );
                         m_CurrentState = MachineState.ConversationEnterWait;
                         goto case MachineState.ConversationEnterWait;
                     }
@@ -80,7 +91,7 @@ namespace GameScript
                     }
                     case MachineState.NodeEnter:
                     {
-                        m_Listener.OnNodeEnter(m_Node, m_OnReady);
+                        m_Listener.OnNodeEnter(m_Node, new(SequenceNumber, this, m_OnReady));
                         m_CurrentState = MachineState.NodeEnterWait;
                         goto case MachineState.NodeEnterWait;
                     }
@@ -103,7 +114,7 @@ namespace GameScript
                     }
                     case MachineState.NodeExit:
                     {
-                        m_Listener.OnNodeExit(m_Node, m_OnReady);
+                        m_Listener.OnNodeExit(m_Node, new(SequenceNumber, this, m_OnReady));
                         m_CurrentState = MachineState.NodeExitWait;
                         goto case MachineState.NodeExitWait;
                     }
@@ -153,7 +164,10 @@ namespace GameScript
                         // Conversation Exit - No Available Edges
                         if (m_AvailableNodes.Count == 0)
                         {
-                            m_Listener.OnConversationExit(m_Conversation, m_OnReady);
+                            m_Listener.OnConversationExit(
+                                m_Conversation,
+                                new(SequenceNumber, this, m_OnReady)
+                            );
                             m_CurrentState = MachineState.ConversationExitWait;
                             goto case MachineState.ConversationExitWait;
                         }
@@ -165,7 +179,10 @@ namespace GameScript
                             && !m_Node.IsPreventResponse
                         )
                         {
-                            m_Listener.OnNodeDecision(m_AvailableNodes, m_OnDecisionMade);
+                            m_Listener.OnNodeDecision(
+                                m_AvailableNodes,
+                                new(SequenceNumber, this, m_OnDecisionMade)
+                            );
                             m_CurrentState = MachineState.NodeDecisionWait;
                             goto case MachineState.NodeDecisionWait;
                         }
@@ -206,9 +223,12 @@ namespace GameScript
             }
         }
 
-        private void OnReady() => m_OnReadyCalled = true;
+        internal void OnReady()
+        {
+            m_OnReadyCalled = true;
+        }
 
-        private void OnDecisionMade(Node node)
+        internal void OnDecisionMade(Node node)
         {
             m_OnDecisionMadeValue = node;
             m_OnDecisionMadeCalled = true;
@@ -216,6 +236,7 @@ namespace GameScript
 
         private void Reset()
         {
+            SequenceNumber = 0;
             m_Node = null;
             m_Listener = null;
             m_Conversation = null;
@@ -250,7 +271,7 @@ namespace GameScript
 
         public void SetBlockExecuted(int blockIndex) => m_RoutineState.SetBlockExecuted(blockIndex);
 
-        public Signal AcquireSignal(int blockIndex) => m_RoutineState.AcquireSignal(blockIndex);
+        public ILessor AcquireLessor(int blockIndex) => m_RoutineState.AcquireLessor(blockIndex);
 
         public bool HaveBlockSignalsFired(int blockIndex) =>
             m_RoutineState.HaveBlockSignalsFired(blockIndex);

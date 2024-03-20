@@ -88,10 +88,7 @@ public class Tester : MonoBehaviour
         GameObject newConversationUI = Instantiate(m_ConversationPrefab);
         newConversationUI.transform.SetParent(m_ConversationContent.transform);
         ConversationUI conversationUI = newConversationUI.GetComponent<ConversationUI>();
-        conversationUI.Initialize(OnConversationFinished);
-
-        // Load conversation
-        Runner.StartConversation(conversationId, conversationUI);
+        conversationUI.Initialize(conversationId, OnConversationFinished);
     }
 
     public void OnLocaleSelected()

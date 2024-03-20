@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 namespace GameScript
@@ -28,12 +29,15 @@ namespace GameScript
         // Using linked lists so we can iterate and add
         private LinkedList<RunnerContext> m_ContextsActive;
         private LinkedList<RunnerContext> m_ContextsInactive;
+        private Thread m_MainThread;
         #endregion
 
         #region Inspector Variables
         [Header("Runner Settings")]
         [SerializeField]
+#pragma warning disable CS0414
         private int m_ExecutionOrder = -1;
+#pragma warning restore CS0414
 
         [SerializeField]
         private bool m_Singleton = true;
@@ -43,28 +47,45 @@ namespace GameScript
         #endregion
 
         #region API
-        /**Start a conversation and return the cancellation token*/
-        public static uint StartConversation(
+        public static ActiveConversation StartConversation(
             ConversationReference conversationRef,
             IRunnerListener listener
         ) => StartConversation(conversationRef.Id, listener);
 
-        public static uint StartConversation(uint conversationId, IRunnerListener listener)
+        public static ActiveConversation StartConversation(
+            uint conversationId,
+            IRunnerListener listener
+        )
         {
             Conversation conversation = Database.FindConversation(conversationId);
             return StartConversation(conversation, listener);
         }
 
-        public static uint StartConversation(Conversation conversation, IRunnerListener listener)
+        public static ActiveConversation StartConversation(
+            Conversation conversation,
+            IRunnerListener listener
+        )
         {
+            EnsureMainThread();
             RunnerContext context = Instance.ContextAcquire();
             context.Start(conversation, listener);
-            return context.ContextId;
+            return new(context.SequenceNumber, context.ContextId);
         }
 
-        /**Stop a conversation you previously started using a cancellation token*/
-        public static void StopConversation(uint cancellationToken) =>
-            Instance.ContextRelease(Instance.FindContextActive(cancellationToken));
+        public static void StopConversation(ActiveConversation active)
+        {
+            EnsureMainThread();
+            RunnerContext ctx = Instance.FindContextActive(active.CancellationToken);
+            if (ctx.SequenceNumber == active.SequenceNumber)
+                Instance.ContextRelease(ctx);
+            // else - we assume the conversation is already ended. Thus this call is idempotent.
+        }
+
+        private static void EnsureMainThread()
+        {
+            if (Instance.m_MainThread != Thread.CurrentThread)
+                throw new Exception("Runner APIs can only be used from the main thread");
+        }
         #endregion
 
         #region Unity Lifecycle Methods
@@ -89,6 +110,7 @@ namespace GameScript
             {
                 m_ContextsInactive.AddLast(new RunnerContext(Settings.Instance));
             }
+            m_MainThread = Thread.CurrentThread;
 
             // Load conversation database
             GameData data = Database.Instance;

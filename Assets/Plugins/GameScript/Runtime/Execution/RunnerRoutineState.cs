@@ -11,9 +11,11 @@ namespace GameScript
         private bool[] m_FlagState;
         private bool m_IsCondition;
         private bool m_ConditionResult;
+        private RunnerContext m_RunnerContext;
 
-        public RunnerRoutineState(uint maxFlags)
+        public RunnerRoutineState(uint maxFlags, RunnerContext context)
         {
+            m_RunnerContext = context; // order matters
             m_Blocks = new(k_InitialBlockPool);
             EnsurePoolSize(k_InitialBlockPool);
             m_BlocksInUse = 0;
@@ -45,7 +47,7 @@ namespace GameScript
 
         public void SetBlockExecuted(int blockIndex) => m_Blocks[blockIndex].SetExecuted();
 
-        public Signal AcquireSignal(int blockIndex) => m_Blocks[blockIndex].AcquireSignal();
+        public ILessor AcquireLessor(int blockIndex) => m_Blocks[blockIndex];
 
         public bool HaveBlockSignalsFired(int blockIndex) =>
             m_Blocks[blockIndex].HaveAllSignalsFired();
@@ -85,7 +87,7 @@ namespace GameScript
         private void EnsurePoolSize(int poolSize)
         {
             for (int i = m_Blocks.Count; i < poolSize; i++)
-                m_Blocks.Add(new());
+                m_Blocks.Add(new(m_RunnerContext));
         }
     }
 }

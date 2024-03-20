@@ -41,8 +41,8 @@ namespace GameScript
                         AssetDatabase.SaveAssets();
                         m_Instance = asset;
 #else
-                        throw new Exception(
-                            $"{RuntimeConstants.APP_NAME} settings ScriptableObject not found"
+                        throw new System.Exception(
+                            $"{RuntimeConstants.k_AppName} settings ScriptableObject not found"
                         );
 #endif
                     }
