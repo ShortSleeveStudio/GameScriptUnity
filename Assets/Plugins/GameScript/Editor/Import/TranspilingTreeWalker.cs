@@ -34,6 +34,10 @@ namespace GameScript
                 if (!routine.isCondition)
                     return "";
                 return "ctx.SetConditionResult(true);";
+
+                // if (!routine.isCondition)
+                //     return "new NoopBlockRoutine()";
+                // return "new NoopConditionRoutine()";
             }
 
             // Create parser
@@ -78,6 +82,69 @@ namespace GameScript
         {
             // Determine routine type
             m_IsBlock = IsBlockOrCondition(tree);
+
+            // // Walk
+            // if (m_IsCondition)
+            //     AppendNoLine(m_Accumulator, 0, "new ConditionRoutine(() => ");
+            // else if (m_IsBlock)
+            //     AppendNoLine(m_Accumulator, 0, "new BlockRoutine(() => {");
+            // else
+            //     AppendNoLine(m_Accumulator, 0, "new ScheduledBlockRoutine(");
+            // Walk(tree);
+            // if (m_IsCondition)
+            //     AppendNoLine(m_Accumulator, 0, ")");
+            // else if (m_IsBlock)
+            //     AppendNoLine(m_Accumulator, 0, "})");
+            // else
+            // {
+            //     for (int i = 0; i < m_ScheduledBlocks.Count; i++)
+            //     {
+            //         ScheduledBlockBuilder block = m_ScheduledBlocks[i];
+            //         if (i > 0)
+            //             AppendNoLine(m_Accumulator, 0, ",");
+
+            //         // Open block
+            //         AppendNoLine(m_Accumulator, 0, $"new ScheduledBlockData(");
+
+            //         // Write entry flags
+            //         AppendNoLine(m_Accumulator, 0, "new RoutineFlag[]{");
+            //         bool firstFlag = true;
+            //         foreach (string flag in block.EntryFlags)
+            //         {
+            //             if (firstFlag)
+            //                 firstFlag = false;
+            //             else
+            //                 AppendNoLine(m_Accumulator, 0, ",");
+
+            //             AppendNoLine(m_Accumulator, 0, $"RoutineFlag.{flag}");
+            //         }
+            //         AppendNoLine(m_Accumulator, 0, "},");
+
+            //         // Write code parameter
+            //         AppendNoLine(m_Accumulator, 0, "(RunnerContext ctx, uint seq) => {");
+            //         AppendNoLine(m_Accumulator, 0, block.Code.ToString());
+            //         AppendNoLine(m_Accumulator, 0, "}");
+            //         AppendNoLine(m_Accumulator, 0, ",");
+
+            //         // Write exit flags
+            //         AppendNoLine(m_Accumulator, 0, "new RoutineFlag[]{");
+            //         firstFlag = true;
+            //         foreach (string flag in block.ExitFlags)
+            //         {
+            //             if (firstFlag)
+            //                 firstFlag = false;
+            //             else
+            //                 AppendLine(m_Accumulator, 0, ",");
+
+            //             AppendLine(m_Accumulator, 0, $"RoutineFlag.{flag}");
+            //         }
+            //         AppendNoLine(m_Accumulator, 0, "}");
+
+            //         // Close block
+            //         AppendNoLine(m_Accumulator, 0, ")");
+            //     }
+            //     AppendNoLine(m_Accumulator, 0, ")");
+            // }
 
             // Walk
             if (m_IsCondition)
@@ -162,6 +229,15 @@ namespace GameScript
                 case CSharpRoutineParser.LiteralContext literalContext:
                     HandleLiteral(literalContext);
                     break;
+                case CSharpRoutineParser.Declaration_statementContext declarationContext:
+                    HandleDeclaration(declarationContext);
+                    break;
+                case CSharpRoutineParser.DeclaratorContext declaratorContext:
+                    HandleDeclarator(declaratorContext);
+                    break;
+                case CSharpRoutineParser.NameContext nameContext:
+                    HandleName(nameContext);
+                    break;
                 default:
                     HandleNodeDefault(ruleNode);
                     break;
@@ -180,6 +256,7 @@ namespace GameScript
             }
 
             // Write routine body
+            AppendLine(m_Accumulator, 0, "uint seq = ctx.SequenceNumber;");
             if (m_ScheduledBlocks.Count > 0)
             {
                 AppendLine(m_Accumulator, 0, $"ctx.SetBlocksInUse({m_ScheduledBlocks.Count});");
@@ -190,25 +267,19 @@ namespace GameScript
                 ScheduledBlockBuilder scheduledBlock = m_ScheduledBlocks[i];
 
                 // Execution Flag Condition Check
+                AppendNoLine(m_Accumulator, 0, $"if (!ctx.HaveBlockFlagsFired({i})");
                 if (scheduledBlock.EntryFlags.Count > 0)
                 {
-                    bool first = true;
-                    AppendNoLine(m_Accumulator, 0, "if (");
                     foreach (string entryFlag in scheduledBlock.EntryFlags)
                     {
-                        if (first)
-                            first = false;
-                        else
-                            AppendNoLine(m_Accumulator, 0, " && ");
                         AppendNoLine(
                             m_Accumulator,
                             0,
-                            "ctx.IsFlagSet((int)"
-                                + $"{EditorConstants.k_RoutineFlagEnum}.{entryFlag})"
+                            $" && ctx.IsFlagSet({EditorConstants.k_RoutineFlagEnum}.{entryFlag})"
                         );
                     }
-                    AppendLine(m_Accumulator, 0, ")");
                 }
+                AppendLine(m_Accumulator, 0, ")");
 
                 // Execution code start
                 AppendLine(m_Accumulator, 0, "{");
@@ -224,19 +295,24 @@ namespace GameScript
                         continue;
                     AppendLine(m_Accumulator, 2, trimmed + ';');
                 }
+                AppendLine(m_Accumulator, 2, $"if (ctx.SequenceNumber != seq) return;");
                 AppendLine(m_Accumulator, 2, $"ctx.SetBlockExecuted({i});");
                 AppendLine(m_Accumulator, 1, "}");
-                AppendLine(m_Accumulator, 1, $"if (ctx.HaveBlockSignalsFired({i}))");
-                AppendLine(m_Accumulator, 1, "{");
-                foreach (string exitFlag in scheduledBlock.ExitFlags)
+                if (scheduledBlock.ExitFlags.Count > 0)
                 {
-                    AppendLine(
-                        m_Accumulator,
-                        2,
-                        $"ctx.SetFlag((int){EditorConstants.k_RoutineFlagEnum}.{exitFlag});"
-                    );
+                    AppendLine(m_Accumulator, 1, $"if (ctx.HaveBlockSignalsFired({i}))");
+                    AppendLine(m_Accumulator, 1, "{");
+                    foreach (string exitFlag in scheduledBlock.ExitFlags)
+                    {
+                        AppendLine(
+                            m_Accumulator,
+                            2,
+                            $"ctx.SetFlag({EditorConstants.k_RoutineFlagEnum}.{exitFlag});"
+                        );
+                    }
+                    AppendLine(m_Accumulator, 2, $"ctx.SetBlockFlagsFired({i});");
+                    AppendLine(m_Accumulator, 1, "}");
                 }
-                AppendLine(m_Accumulator, 1, "}");
 
                 // Execution code end
                 AppendLine(m_Accumulator, 0, "}");
@@ -331,18 +407,24 @@ namespace GameScript
                 switch (terminalChild.Symbol.Type)
                 {
                     case CSharpRoutineParser.LEASE:
+                    {
                         EnsureNotCondition("@lease is not allowed in conditions");
                         int currentBlock = m_ScheduledBlocks.Count - 1;
                         ScheduledBlockBuilder block = m_ScheduledBlocks[currentBlock];
-                        AppendNoLine(block.Code, 0, $"ctx.AcquireLease({currentBlock})");
+                        AppendNoLine(block.Code, 0, $"ctx.AcquireLease({currentBlock}, seq)");
                         break;
+                    }
                     case CSharpRoutineParser.NODE:
+                    {
                         EnsureNotCondition("@node is not allowed in conditions");
-                        AppendNoLine(m_ScheduledBlocks[^1].Code, 0, "ctx.GetCurrentNode()");
+                        AppendNoLine(m_ScheduledBlocks[^1].Code, 0, "ctx.GetCurrentNode(seq)");
                         break;
+                    }
                     default:
+                    {
                         Walk(child);
                         break;
+                    }
                 }
             }
             else
@@ -353,6 +435,36 @@ namespace GameScript
         {
             if (m_IsCondition)
                 throw new Exception(errorMessage);
+        }
+        #endregion
+
+        #region Declarations & Names
+        private void HandleDeclaration(
+            CSharpRoutineParser.Declaration_statementContext declarationContext
+        )
+        {
+            StringBuilder builder = m_IsBlock ? m_Accumulator : m_ScheduledBlocks[^1].Code;
+            Walk(declarationContext.type());
+            AppendNoLine(builder, 0, " ");
+            Walk(declarationContext.declarator_init());
+            AppendNoLine(builder, 0, ";");
+        }
+
+        private void HandleDeclarator(CSharpRoutineParser.DeclaratorContext declaratorContext) =>
+            HandleDeclaratorOrName(declaratorContext.GetText());
+
+        private void HandleName(CSharpRoutineParser.NameContext nameContext) =>
+            HandleDeclaratorOrName(nameContext.GetText());
+
+        private void HandleDeclaratorOrName(string str)
+        {
+            StringBuilder builder = m_IsBlock ? m_Accumulator : m_ScheduledBlocks[^1].Code;
+            if (str == "seq")
+                AppendNoLine(builder, 0, "_seq");
+            else if (str == "ctx")
+                AppendNoLine(builder, 0, "_ctx");
+            else
+                AppendNoLine(builder, 0, str);
         }
         #endregion
 

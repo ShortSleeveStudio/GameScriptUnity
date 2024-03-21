@@ -72,21 +72,80 @@ namespace GameScript
             return new(context.SequenceNumber, context.ContextId);
         }
 
+        public static void SetFlag(ActiveConversation active, RoutineFlag flag)
+        {
+            EnsureMainThread();
+            RunnerContext ctx = Instance.FindContextActive(active);
+            if (ctx == null)
+                throw new Exception(
+                    "You can't set a flag for conversations that have already ended"
+                );
+            ctx.SetFlag(flag);
+        }
+
+        public static void SetFlagForAll(RoutineFlag flag)
+        {
+            LinkedListNode<RunnerContext> node = Instance.m_ContextsActive.First;
+            while (node != null)
+            {
+                LinkedListNode<RunnerContext> next = node.Next;
+                node.Value.SetFlag(flag);
+                node = next;
+            }
+        }
+
+        public static void RegisterFlagListener(
+            ActiveConversation active,
+            Action<RoutineFlag> listener
+        )
+        {
+            EnsureMainThread();
+            RunnerContext ctx = Instance.FindContextActive(active);
+            if (ctx == null)
+                throw new Exception(
+                    "You can't register a flag listener on a conversation that's already ended"
+                );
+            ctx.OnFlagRaised += listener;
+        }
+
+        public static void UnregisterFlagListener(
+            ActiveConversation active,
+            Action<RoutineFlag> listener
+        )
+        {
+            EnsureMainThread();
+            RunnerContext ctx = Instance.FindContextActive(active);
+            if (ctx == null)
+                return;
+            ctx.OnFlagRaised -= listener;
+        }
+
+        public static bool IsActive(ActiveConversation active)
+        {
+            EnsureMainThread();
+            RunnerContext ctx = Instance.FindContextActive(active);
+            return ctx != null;
+        }
+
         public static void StopConversation(ActiveConversation active)
         {
             EnsureMainThread();
-            RunnerContext ctx = Instance.FindContextActive(active.CancellationToken);
-            if (ctx.SequenceNumber == active.SequenceNumber)
-                Instance.ContextRelease(ctx);
-            // else - we assume the conversation is already ended. Thus this call is idempotent.
+            RunnerContext ctx = Instance.FindContextActive(active);
+            if (ctx == null)
+                // we assume the conversation is already ended. Thus this call is idempotent.
+                return;
+            Instance.ContextRelease(ctx);
         }
 
         public static void StopAllConversations()
         {
             EnsureMainThread();
-            foreach (RunnerContext context in Instance.m_ContextsActive)
+            LinkedListNode<RunnerContext> node = Instance.m_ContextsActive.First;
+            while (node != null)
             {
-                Instance.ContextRelease(context);
+                LinkedListNode<RunnerContext> next = node.Next;
+                Instance.ContextRelease(node);
+                node = next;
             }
         }
 
@@ -170,18 +229,32 @@ namespace GameScript
 
         private void ContextRelease(RunnerContext context)
         {
-            context.Stop();
             LinkedListNode<RunnerContext> node = m_ContextsActive.Find(context);
+            // Idempotent
+            if (node != null)
+                ContextRelease(node);
+        }
+
+        private void ContextRelease(LinkedListNode<RunnerContext> node)
+        {
+            node.Value.Stop();
             m_ContextsActive.Remove(node);
             m_ContextsInactive.AddLast(node);
         }
 
-        private RunnerContext FindContextActive(uint contextId)
+        private RunnerContext FindContextActive(ActiveConversation active)
         {
-            foreach (RunnerContext context in m_ContextsActive)
+            LinkedListNode<RunnerContext> node = m_ContextsActive.First;
+            while (node != null)
             {
-                if (context.ContextId == contextId)
-                    return context;
+                LinkedListNode<RunnerContext> next = node.Next;
+                if (node.Value.ContextId == active.ContextId)
+                {
+                    if (node.Value.SequenceNumber != active.SequenceNumber)
+                        return null;
+                    return node.Value;
+                }
+                node = next;
             }
             return null;
         }

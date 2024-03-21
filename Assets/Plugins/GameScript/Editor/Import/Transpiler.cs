@@ -117,6 +117,7 @@ namespace GameScript
                             3,
                             $"RoutineDirectory.Directory = new System.Action<"
                                 + $"{EditorConstants.k_ContextClass}>[{routineCount + 1}];"
+                        // $"RoutineDirectory.Directory = new IRoutine[{routineCount + 1}];"
                         );
 
                         // Write Noop Routine - Code
@@ -253,6 +254,11 @@ namespace GameScript
             try
             {
                 string generatedCode = TranspilingTreeWalker.Transpile(routine, flagCache);
+                // WriteLine(writer, 4, $"RoutineDirectory.Directory[{methodIndex}] = ");
+                // WriteNoLine(writer, 0, generatedCode);
+                // WriteLine(writer, 0, ";");
+
+
                 if (generatedCode.Length > 0)
                 {
                     string[] lines = generatedCode.Split("\n");

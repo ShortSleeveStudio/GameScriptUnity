@@ -41,6 +41,12 @@ public class ConversationUI : MonoBehaviour, IRunnerListener
     {
         m_OnComplete = onComplete;
         m_ActiveConversation = Runner.StartConversation(conversationId, this);
+        m_ActiveConversation.RegisterFlagListener(
+            (RoutineFlag flag) =>
+            {
+                Debug.Log($"FLAG = {flag}");
+            }
+        );
     }
     #endregion
 

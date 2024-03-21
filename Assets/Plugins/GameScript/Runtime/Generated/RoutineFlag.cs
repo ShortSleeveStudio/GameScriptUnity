@@ -8,5 +8,6 @@ namespace GameScript
         Bunzo,
         C1,
         C2,
+        External,
     }
 }

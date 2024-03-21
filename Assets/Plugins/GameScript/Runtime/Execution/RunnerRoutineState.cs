@@ -47,6 +47,10 @@ namespace GameScript
 
         public void SetBlockExecuted(int blockIndex) => m_Blocks[blockIndex].SetExecuted();
 
+        public bool HaveBlockFlagsFired(int blockIndex) => m_Blocks[blockIndex].HaveFlagsFired();
+
+        public void SetBlockFlagsFired(int blockIndex) => m_Blocks[blockIndex].SetFlagsFired();
+
         public Lease AcquireLease(int blockIndex) => m_Blocks[blockIndex].AcquireLease();
 
         public bool HaveBlockSignalsFired(int blockIndex) =>
@@ -69,9 +73,9 @@ namespace GameScript
             m_ConditionResult = result;
         }
 
-        public void SetFlag(int flagIndex) => m_FlagState[flagIndex] = true;
+        public void SetFlag(RoutineFlag flagIndex) => m_FlagState[(int)flagIndex] = true;
 
-        public bool IsFlagSet(int flagIndex) => m_FlagState[flagIndex];
+        public bool IsFlagSet(RoutineFlag flagIndex) => m_FlagState[(int)flagIndex];
 
         public void Reset()
         {

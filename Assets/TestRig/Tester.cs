@@ -97,6 +97,11 @@ public class Tester : MonoBehaviour
         m_TestSettings.CurrentLocale = Database.FindLocale(locale.Id);
     }
 
+    public void OnExternalFlagPressed()
+    {
+        Runner.SetFlagForAll(RoutineFlag.External);
+    }
+
     public void OnConversationFinished(ConversationUI conversationUI)
     {
         Destroy(conversationUI.gameObject);

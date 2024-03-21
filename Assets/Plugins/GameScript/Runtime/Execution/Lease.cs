@@ -7,6 +7,8 @@ namespace GameScript
         private RunnerContext m_Context;
         private uint m_OriginalSequenceNumber;
 
+        public static Lease DummyLease() => new() { m_Signalled = true };
+
         internal Lease(uint sequenceNumber, RunnerContext context, Signal signal)
         {
             m_Signalled = false;
@@ -16,14 +18,12 @@ namespace GameScript
         }
 
         public bool IsValid() =>
-            m_Context.SequenceNumber == m_OriginalSequenceNumber && !m_Signalled;
+            !m_Signalled && m_Context.SequenceNumber == m_OriginalSequenceNumber;
 
         public void Release()
         {
             if (!IsValid())
-            {
                 return;
-            }
             m_Signalled = true;
             m_Signal();
         }

@@ -31,6 +31,7 @@ namespace GameScript
         private Action<Node> m_OnDecisionMade;
         private MachineState m_CurrentState;
         private List<Node> m_AvailableNodes;
+        private Lease m_DummyLease;
 
         internal RunnerContext(Settings settings)
         {
@@ -40,9 +41,12 @@ namespace GameScript
             m_OnDecisionMade = OnDecisionMade;
             m_RoutineState = new(settings.MaxFlags, this);
             m_AvailableNodes = new(k_DefaultEdgeCapacity);
+            m_DummyLease = Lease.DummyLease();
         }
 
         #region Execution
+        internal event Action<RoutineFlag> OnFlagRaised;
+
         internal void Start(Conversation conversation, IRunnerListener listener)
         {
             m_Node = conversation.RootNode;
@@ -54,10 +58,8 @@ namespace GameScript
 
         internal void Stop()
         {
-            // Since this is only called by Runner, we don't necessarily have to go though
-            // OnConversationExit. Runner will already place this context back into the inactive
-            // list.
-            // The only question is: will users want to receive OnConversationExit?
+            // We'll still notify if possible
+            m_Listener?.OnConversationExit(m_Conversation, new(SequenceNumber, this, m_OnReady));
             Reset();
         }
 
@@ -105,7 +107,13 @@ namespace GameScript
                     }
                     case MachineState.NodeExecute:
                     {
+                        uint seq = SequenceNumber;
+                        // RoutineDirectory.Directory[m_Node.Code].Execute(this);
                         RoutineDirectory.Directory[m_Node.Code](this);
+                        // Edge case:
+                        // They stop the conversation inside of the routine.
+                        if (seq != SequenceNumber)
+                            return false;
                         if (!m_RoutineState.IsRoutineExecuted())
                             return true;
                         m_RoutineState.Reset();
@@ -137,6 +145,7 @@ namespace GameScript
                         {
                             Edge edge = m_Node.OutgoingEdges[i];
                             // Conditions cannot be async
+                            // RoutineDirectory.Directory[edge.Target.Condition].Execute(this);
                             RoutineDirectory.Directory[edge.Target.Condition](this);
                             if (m_RoutineState.GetConditionResult())
                             {
@@ -236,6 +245,7 @@ namespace GameScript
 
         private void Reset()
         {
+            OnFlagRaised = null;
             SequenceNumber = 0;
             m_Node = null;
             m_Listener = null;
@@ -250,14 +260,13 @@ namespace GameScript
         #endregion
 
         #region Conversation
-        public Conversation GetCurrentConversation() => m_Conversation;
-
-        public void SetCurrentConversation(Conversation conversation) =>
-            m_Conversation = conversation;
-
-        public Node GetCurrentNode() => m_Node;
-
-        public void SetCurrentNode(Node node) => m_Node = node;
+        public Node GetCurrentNode(uint sequenceNumber)
+        {
+            // If the conversation ended, send back null
+            if (sequenceNumber != SequenceNumber)
+                return null;
+            return m_Node;
+        }
         #endregion
 
         #region Routines
@@ -271,16 +280,50 @@ namespace GameScript
 
         public void SetBlockExecuted(int blockIndex) => m_RoutineState.SetBlockExecuted(blockIndex);
 
-        public Lease AcquireLease(int blockIndex) => m_RoutineState.AcquireLease(blockIndex);
+        public bool HaveBlockFlagsFired(int blockIndex) =>
+            m_RoutineState.HaveBlockFlagsFired(blockIndex);
+
+        public void SetBlockFlagsFired(int blockIndex) =>
+            m_RoutineState.SetBlockFlagsFired(blockIndex);
+
+        public Lease AcquireLease(int blockIndex, uint sequenceNumber)
+        {
+            // If the conversation ended, send back a dummy lease
+            if (sequenceNumber != SequenceNumber)
+                return m_DummyLease;
+            return m_RoutineState.AcquireLease(blockIndex);
+        }
 
         public bool HaveBlockSignalsFired(int blockIndex) =>
             m_RoutineState.HaveBlockSignalsFired(blockIndex);
         #endregion
 
         #region Flags
-        public void SetFlag(int flagIndex) => m_RoutineState.SetFlag(flagIndex);
+        public void SetFlag(RoutineFlag flag)
+        {
+            m_RoutineState.SetFlag(flag);
+            OnFlagRaised?.Invoke(flag);
+        }
 
-        public bool IsFlagSet(int flagIndex) => m_RoutineState.IsFlagSet(flagIndex);
+        public bool IsFlagSet(RoutineFlag flag) => m_RoutineState.IsFlagSet(flag);
+
+        public void SetFlags(RoutineFlag[] flags)
+        {
+            for (int i = 0; i < flags.Length; i++)
+            {
+                SetFlag(flags[i]);
+            }
+        }
+
+        public bool AreFlagsSet(RoutineFlag[] flags)
+        {
+            for (int i = 0; i < flags.Length; i++)
+            {
+                if (!IsFlagSet(flags[i]))
+                    return false;
+            }
+            return true;
+        }
         #endregion
 
         #region States

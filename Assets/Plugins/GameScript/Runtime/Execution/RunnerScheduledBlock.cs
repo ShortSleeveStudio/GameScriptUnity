@@ -8,6 +8,7 @@ namespace GameScript
         private List<SignalData> m_Signals;
         private int m_CurrentSignal;
         private bool m_Executed;
+        private bool m_FlagsFired;
         private RunnerContext m_RunnerContext;
 
         public RunnerScheduledBlock(RunnerContext runnerContext)
@@ -17,6 +18,7 @@ namespace GameScript
             EnsurePoolSize(k_InitialSignalPool);
 
             m_Executed = false;
+            m_FlagsFired = false;
             m_CurrentSignal = 0;
         }
 
@@ -35,6 +37,10 @@ namespace GameScript
 
         public void SetExecuted() => m_Executed = true;
 
+        public bool HaveFlagsFired() => m_FlagsFired;
+
+        public void SetFlagsFired() => m_FlagsFired = true;
+
         public bool HaveAllSignalsFired()
         {
             for (int i = 0; i < m_CurrentSignal; i++)
@@ -48,6 +54,7 @@ namespace GameScript
         public void Reset()
         {
             m_Executed = false;
+            m_FlagsFired = false;
             m_CurrentSignal = 0;
             for (int i = 0; i < m_Signals.Count; i++)
                 m_Signals[i].Triggered = false;

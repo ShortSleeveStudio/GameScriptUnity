@@ -1,7 +1,10 @@
+using System;
+
 namespace GameScript
 {
     public static class RoutineDirectory
     {
-        public static System.Action<RunnerContext>[] Directory;
+        public static Action<RunnerContext>[] Directory;
+        // public static IRoutine[] Directory;
     }
 }
