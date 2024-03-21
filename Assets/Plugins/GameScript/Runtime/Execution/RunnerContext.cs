@@ -108,7 +108,6 @@ namespace GameScript
                     case MachineState.NodeExecute:
                     {
                         uint seq = SequenceNumber;
-                        // RoutineDirectory.Directory[m_Node.Code].Execute(this);
                         RoutineDirectory.Directory[m_Node.Code](this);
                         // Edge case:
                         // They stop the conversation inside of the routine.
@@ -145,7 +144,6 @@ namespace GameScript
                         {
                             Edge edge = m_Node.OutgoingEdges[i];
                             // Conditions cannot be async
-                            // RoutineDirectory.Directory[edge.Target.Condition].Execute(this);
                             RoutineDirectory.Directory[edge.Target.Condition](this);
                             if (m_RoutineState.GetConditionResult())
                             {

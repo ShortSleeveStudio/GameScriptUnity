@@ -5,6 +5,5 @@ namespace GameScript
     public static class RoutineDirectory
     {
         public static Action<RunnerContext>[] Directory;
-        // public static IRoutine[] Directory;
     }
 }

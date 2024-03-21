@@ -34,10 +34,6 @@ namespace GameScript
                 if (!routine.isCondition)
                     return "";
                 return "ctx.SetConditionResult(true);";
-
-                // if (!routine.isCondition)
-                //     return "new NoopBlockRoutine()";
-                // return "new NoopConditionRoutine()";
             }
 
             // Create parser
@@ -82,69 +78,6 @@ namespace GameScript
         {
             // Determine routine type
             m_IsBlock = IsBlockOrCondition(tree);
-
-            // // Walk
-            // if (m_IsCondition)
-            //     AppendNoLine(m_Accumulator, 0, "new ConditionRoutine(() => ");
-            // else if (m_IsBlock)
-            //     AppendNoLine(m_Accumulator, 0, "new BlockRoutine(() => {");
-            // else
-            //     AppendNoLine(m_Accumulator, 0, "new ScheduledBlockRoutine(");
-            // Walk(tree);
-            // if (m_IsCondition)
-            //     AppendNoLine(m_Accumulator, 0, ")");
-            // else if (m_IsBlock)
-            //     AppendNoLine(m_Accumulator, 0, "})");
-            // else
-            // {
-            //     for (int i = 0; i < m_ScheduledBlocks.Count; i++)
-            //     {
-            //         ScheduledBlockBuilder block = m_ScheduledBlocks[i];
-            //         if (i > 0)
-            //             AppendNoLine(m_Accumulator, 0, ",");
-
-            //         // Open block
-            //         AppendNoLine(m_Accumulator, 0, $"new ScheduledBlockData(");
-
-            //         // Write entry flags
-            //         AppendNoLine(m_Accumulator, 0, "new RoutineFlag[]{");
-            //         bool firstFlag = true;
-            //         foreach (string flag in block.EntryFlags)
-            //         {
-            //             if (firstFlag)
-            //                 firstFlag = false;
-            //             else
-            //                 AppendNoLine(m_Accumulator, 0, ",");
-
-            //             AppendNoLine(m_Accumulator, 0, $"RoutineFlag.{flag}");
-            //         }
-            //         AppendNoLine(m_Accumulator, 0, "},");
-
-            //         // Write code parameter
-            //         AppendNoLine(m_Accumulator, 0, "(RunnerContext ctx, uint seq) => {");
-            //         AppendNoLine(m_Accumulator, 0, block.Code.ToString());
-            //         AppendNoLine(m_Accumulator, 0, "}");
-            //         AppendNoLine(m_Accumulator, 0, ",");
-
-            //         // Write exit flags
-            //         AppendNoLine(m_Accumulator, 0, "new RoutineFlag[]{");
-            //         firstFlag = true;
-            //         foreach (string flag in block.ExitFlags)
-            //         {
-            //             if (firstFlag)
-            //                 firstFlag = false;
-            //             else
-            //                 AppendLine(m_Accumulator, 0, ",");
-
-            //             AppendLine(m_Accumulator, 0, $"RoutineFlag.{flag}");
-            //         }
-            //         AppendNoLine(m_Accumulator, 0, "}");
-
-            //         // Close block
-            //         AppendNoLine(m_Accumulator, 0, ")");
-            //     }
-            //     AppendNoLine(m_Accumulator, 0, ")");
-            // }
 
             // Walk
             if (m_IsCondition)
