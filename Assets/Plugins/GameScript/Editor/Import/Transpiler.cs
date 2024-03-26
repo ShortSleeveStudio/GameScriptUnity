@@ -111,45 +111,17 @@ namespace GameScript
                         );
                         WriteLine(writer, 2, $"private static void Initialize()");
                         WriteLine(writer, 2, "{");
-                        // +1 for noop
+                        // +2 for the two noop routines (code/condition)
                         WriteLine(
                             writer,
                             3,
                             $"RoutineDirectory.Directory = new System.Action<"
-                                + $"{EditorConstants.k_ContextClass}>[{routineCount + 1}];"
-                        );
-
-                        // Write Noop Routine - Code
-                        WriteRoutine(
-                            new Routines() { id = EditorConstants.k_NoopRoutineCodeId, code = "" },
-                            writer,
-                            flagCache,
-                            0,
-                            routineIdToIndex
-                        );
-
-                        // Write Noop Routine - Condition
-                        WriteRoutine(
-                            new Routines()
-                            {
-                                id = EditorConstants.k_NoopRoutineConditionId,
-                                code = "",
-                                isCondition = true,
-                            },
-                            writer,
-                            flagCache,
-                            1,
-                            routineIdToIndex
+                                + $"{EditorConstants.k_ContextClass}>[{routineCount + 2}];"
                         );
 
                         // Write All Other Routines
                         uint currentIndex = 0;
-                        for (
-                            // account for noops
-                            uint i = 2;
-                            i < routineCount;
-                            i += EditorConstants.k_SqlBatchSize
-                        )
+                        for (uint i = 0; i < routineCount; i += EditorConstants.k_SqlBatchSize)
                         {
                             Progress.Report(
                                 progressId,
@@ -199,6 +171,29 @@ namespace GameScript
                                 }
                             }
                         }
+
+                        // Write Noop Routine - Code
+                        WriteRoutine(
+                            new Routines() { id = EditorConstants.k_NoopRoutineCodeId, code = "" },
+                            writer,
+                            flagCache,
+                            (uint)routineCount,
+                            routineIdToIndex
+                        );
+
+                        // Write Noop Routine - Condition
+                        WriteRoutine(
+                            new Routines()
+                            {
+                                id = EditorConstants.k_NoopRoutineConditionId,
+                                code = "",
+                                is_condition = true,
+                            },
+                            writer,
+                            flagCache,
+                            (uint)routineCount + 1,
+                            routineIdToIndex
+                        );
 
                         WriteLine(writer, 2, "}"); // Initialize
                         WriteLine(writer, 1, "}"); // Class

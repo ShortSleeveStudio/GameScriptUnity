@@ -10,8 +10,8 @@ namespace GameScript
         public const string TABLE_NAME = "locales";
         public long id;
         public string name;
-        public bool isSystemCreated;
-        public long localizedName;
+        public bool is_system_created;
+        public long localized_name;
 
         public static Locales FromReader(SqliteDataReader reader)
         {
@@ -24,11 +24,11 @@ namespace GameScript
                 ? ""
                 : reader.GetString(1)
                 ;
-            obj.isSystemCreated = reader.GetValue(2) is DBNull
+            obj.is_system_created = reader.GetValue(2) is DBNull
                 ? false
                 : reader.GetBoolean(2)
                 ;
-            obj.localizedName = reader.GetValue(3) is DBNull
+            obj.localized_name = reader.GetValue(3) is DBNull
                 ? 0
                 : reader.GetInt64(3)
                 ;

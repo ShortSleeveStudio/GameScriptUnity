@@ -239,7 +239,7 @@ namespace GameScript
                                 PathCombine(conversationLocFolderPath, localizationName) + ".asset"
                             );
                         },
-                        $"WHERE parent = {conversation.id} AND isSystemCreated = false"
+                        $"WHERE parent = {conversation.id} AND is_system_created = false"
                     );
                 }
             );
@@ -265,7 +265,7 @@ namespace GameScript
                         PathCombine(globalLocalizationFolder, localizationName) + ".asset";
                     MoveOrCreateAsset(idToLocalizationRef, (uint)localization.id, localizationPath);
                 },
-                "WHERE parent IS NULL and isSystemCreated = false"
+                "WHERE parent IS NULL and is_system_created = false"
             );
 
             // See if we have any broken references

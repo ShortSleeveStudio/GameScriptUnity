@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
+using UnityEngine;
 using static GameScript.StringWriter;
 
 namespace GameScript
@@ -20,7 +21,7 @@ namespace GameScript
         {
             m_FlagCache = flagCache;
             m_Accumulator = new();
-            m_IsCondition = routine.isCondition;
+            m_IsCondition = routine.is_condition;
             m_ScheduledBlocks = new();
             m_Routine = routine;
         }
@@ -31,7 +32,7 @@ namespace GameScript
             string code = routine.code.Trim();
             if (code.Length == 0)
             {
-                if (!routine.isCondition)
+                if (!routine.is_condition)
                     return "";
                 return "ctx.SetConditionResult(true);";
             }
@@ -49,7 +50,7 @@ namespace GameScript
             // Transpile
             try
             {
-                IParseTree tree = routine.isCondition ? parser.expression() : parser.routine();
+                IParseTree tree = routine.is_condition ? parser.expression() : parser.routine();
                 TranspilingTreeWalker walker = new(flagCache, routine);
                 walker.WalkEntry(tree);
                 return walker.ToString();
@@ -94,7 +95,7 @@ namespace GameScript
 
         private bool IsBlockOrCondition(IParseTree routineTree)
         {
-            if (m_Routine.isCondition)
+            if (m_Routine.is_condition)
                 return true;
             if (routineTree.ChildCount == 0)
                 return true;

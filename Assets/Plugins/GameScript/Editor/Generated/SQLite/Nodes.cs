@@ -11,17 +11,17 @@ namespace GameScript
         public long id;
         public long parent;
         public long actor;
-        public long uiResponseText;
-        public long voiceText;
+        public long ui_response_text;
+        public long voice_text;
         public long condition;
         public long code;
-        public long codeOverride;
-        public bool isPreventResponse;
+        public long code_override;
+        public bool is_prevent_response;
         public string notes;
-        public bool isSystemCreated;
+        public bool is_system_created;
         public string type;
-        public double positionX;
-        public double positionY;
+        public double position_x;
+        public double position_y;
 
         public static Nodes FromReader(SqliteDataReader reader)
         {
@@ -38,11 +38,11 @@ namespace GameScript
                 ? 0
                 : reader.GetInt64(2)
                 ;
-            obj.uiResponseText = reader.GetValue(3) is DBNull
+            obj.ui_response_text = reader.GetValue(3) is DBNull
                 ? 0
                 : reader.GetInt64(3)
                 ;
-            obj.voiceText = reader.GetValue(4) is DBNull
+            obj.voice_text = reader.GetValue(4) is DBNull
                 ? 0
                 : reader.GetInt64(4)
                 ;
@@ -54,11 +54,11 @@ namespace GameScript
                 ? 0
                 : reader.GetInt64(6)
                 ;
-            obj.codeOverride = reader.GetValue(7) is DBNull
+            obj.code_override = reader.GetValue(7) is DBNull
                 ? 0
                 : reader.GetInt64(7)
                 ;
-            obj.isPreventResponse = reader.GetValue(8) is DBNull
+            obj.is_prevent_response = reader.GetValue(8) is DBNull
                 ? false
                 : reader.GetBoolean(8)
                 ;
@@ -66,7 +66,7 @@ namespace GameScript
                 ? ""
                 : reader.GetString(9)
                 ;
-            obj.isSystemCreated = reader.GetValue(10) is DBNull
+            obj.is_system_created = reader.GetValue(10) is DBNull
                 ? false
                 : reader.GetBoolean(10)
                 ;
@@ -74,11 +74,11 @@ namespace GameScript
                 ? ""
                 : reader.GetString(11)
                 ;
-            obj.positionX = reader.GetValue(12) is DBNull
+            obj.position_x = reader.GetValue(12) is DBNull
                 ? 0d
                 : reader.GetDouble(12)
                 ;
-            obj.positionY = reader.GetValue(13) is DBNull
+            obj.position_y = reader.GetValue(13) is DBNull
                 ? 0d
                 : reader.GetDouble(13)
                 ;

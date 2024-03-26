@@ -258,19 +258,13 @@ MonoBehaviour:
   m_LocaleDropdown: {fileID: 1038387752}
   m_TestSettings: {fileID: 11400000, guid: 86a9c8b75c42cbb43803cd4786e28ed7, type: 2}
   m_ConversationReferences:
-  - {fileID: 11400000, guid: 422d6e8303ba1bb4aa159affe7c14b5f, type: 2}
-  - {fileID: 11400000, guid: c40e5b48157e9d5438f6b476a75c0f1b, type: 2}
-  - {fileID: 11400000, guid: 2dbf4d8a3a1da7344ac21bf93ea7acdc, type: 2}
   - {fileID: 11400000, guid: b83c8c0fd8d2b414197f4d30461f11c5, type: 2}
   - {fileID: 11400000, guid: 9085d29e8227a4647bf1c5043b1be2bd, type: 2}
-  - {fileID: 11400000, guid: f79dd39029dd9f040bd53b0908ec6c97, type: 2}
   - {fileID: 11400000, guid: f01ec0c358d0b874587ba5c349a82f1f, type: 2}
-  - {fileID: 11400000, guid: 6da951bb88ea93c4b8db5737170cb742, type: 2}
-  - {fileID: 11400000, guid: dbbb9bea3a155d240b6c554f93256071, type: 2}
   m_LocaleReferences:
+  - {fileID: 11400000, guid: a2a76595b8dad2e4a83486c2004d93e1, type: 2}
   - {fileID: 11400000, guid: 1a451c2e50ce8e04bab9f1f88ec8a692, type: 2}
-  - {fileID: 11400000, guid: 6e7a7b0d9651cbb4e9d5e042ad5e6848, type: 2}
-  - {fileID: 11400000, guid: c96e720d3019d1e44a400508b94b92cd, type: 2}
+  - {fileID: 11400000, guid: 3de1a36e9cb25ee48a11a8408b95f41e, type: 2}
 --- !u!1 &118263273
 GameObject:
   m_ObjectHideFlags: 0

@@ -93,9 +93,10 @@ public class ConversationUI : MonoBehaviour, IRunnerListener
         {
             GameObject historyItemGO = Instantiate(m_HistoryItemPrefab);
             HistoryItemUI historyItem = historyItemGO.GetComponent<HistoryItemUI>();
-            string actorName = node.Actor.LocalizedName.GetLocalization(
-                m_TestSettings.CurrentLocale
-            );
+            string actorName =
+                node.Actor.LocalizedName != null
+                    ? node.Actor.LocalizedName.GetLocalization(m_TestSettings.CurrentLocale)
+                    : "<Player Name Missing>";
             string voiceText = node.VoiceText.GetLocalization(m_TestSettings.CurrentLocale);
             historyItem.SetVoiceText(voiceText);
             historyItem.SetActorName(actorName);

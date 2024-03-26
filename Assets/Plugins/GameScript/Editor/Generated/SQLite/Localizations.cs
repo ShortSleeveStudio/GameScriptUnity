@@ -11,10 +11,10 @@ namespace GameScript
         public long id;
         public string name;
         public long parent;
-        public bool isSystemCreated;
+        public bool is_system_created;
+        public string locale_0;
         public string locale_1;
-        public string locale_2;
-        public string locale_3;
+        public string locale_4;
 
         public static Localizations FromReader(SqliteDataReader reader)
         {
@@ -31,19 +31,19 @@ namespace GameScript
                 ? 0
                 : reader.GetInt64(2)
                 ;
-            obj.isSystemCreated = reader.GetValue(3) is DBNull
+            obj.is_system_created = reader.GetValue(3) is DBNull
                 ? false
                 : reader.GetBoolean(3)
                 ;
-            obj.locale_1 = reader.GetValue(4) is DBNull
+            obj.locale_0 = reader.GetValue(4) is DBNull
                 ? ""
                 : reader.GetString(4)
                 ;
-            obj.locale_2 = reader.GetValue(5) is DBNull
+            obj.locale_1 = reader.GetValue(5) is DBNull
                 ? ""
                 : reader.GetString(5)
                 ;
-            obj.locale_3 = reader.GetValue(6) is DBNull
+            obj.locale_4 = reader.GetValue(6) is DBNull
                 ? ""
                 : reader.GetString(6)
                 ;

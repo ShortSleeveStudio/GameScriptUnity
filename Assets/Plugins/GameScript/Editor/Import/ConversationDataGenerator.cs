@@ -147,7 +147,7 @@ namespace GameScript
                     idToLocalization.Add(diskLocalization.Id, allEmpty ? null : diskLocalization);
 
                     // Add localization to list (if this is non-system created)
-                    if (!localization.isSystemCreated)
+                    if (!localization.is_system_created)
                     {
                         localizationList.Add(diskLocalization);
                     }
@@ -177,7 +177,7 @@ namespace GameScript
                         Id = (uint)locale.id,
                         Index = index,
                         Name = locale.name,
-                        LocalizedName = idToLocalization[(uint)locale.localizedName],
+                        LocalizedName = idToLocalization[(uint)locale.localized_name],
                     };
                 }
             );
@@ -206,7 +206,7 @@ namespace GameScript
                         {
                             Id = (uint)actor.id,
                             Name = actor.name,
-                            LocalizedName = idToLocalization[(uint)actor.localizedName],
+                            LocalizedName = idToLocalization[(uint)actor.localized_name],
                         };
                     actors[index] = diskActor;
                     idToActor[diskActor.Id] = diskActor;
@@ -254,7 +254,7 @@ namespace GameScript
                         RootNode = root,
                     };
                 },
-                "WHERE isDeleted = false"
+                "WHERE is_deleted = false"
             );
 
             // Handle all edges that link outside of their conversations
@@ -297,8 +297,8 @@ namespace GameScript
                         ? routineIdToIndex[(uint)node.condition]
                         : routineIdToIndex[EditorConstants.k_NoopRoutineConditionId];
                     // Handle default routines
-                    if (node.codeOverride != 0)
-                        node.code = node.codeOverride;
+                    if (node.code_override != 0)
+                        node.code = node.code_override;
                     uint code = routineIdToIndex.ContainsKey((uint)node.code)
                         ? routineIdToIndex[(uint)node.code]
                         : routineIdToIndex[EditorConstants.k_NoopRoutineCodeId];
@@ -309,7 +309,7 @@ namespace GameScript
                             Actor = idToActor[(uint)node.actor],
                             Condition = condition,
                             Code = code,
-                            IsPreventResponse = node.isPreventResponse,
+                            IsPreventResponse = node.is_prevent_response,
                         };
 
                     // Note: Root nodes don't have localizations or code.
@@ -321,8 +321,8 @@ namespace GameScript
                     }
                     else
                     {
-                        diskNode.UIResponseText = idToLocalization[(uint)node.uiResponseText];
-                        diskNode.VoiceText = idToLocalization[(uint)node.voiceText];
+                        diskNode.UIResponseText = idToLocalization[(uint)node.ui_response_text];
+                        diskNode.VoiceText = idToLocalization[(uint)node.voice_text];
                     }
 
                     // Add to node lookup table

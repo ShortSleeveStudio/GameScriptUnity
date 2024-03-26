@@ -61,9 +61,7 @@ public class Tester : MonoBehaviour
         m_ConversationDropdown.ClearOptions();
         for (int i = 0; i < m_ConversationReferences.Length; i++)
         {
-            conversationOptions.Add(
-                new TMP_Dropdown.OptionData($"Conversation {m_ConversationReferences[i].Id}")
-            );
+            conversationOptions.Add(new TMP_Dropdown.OptionData(m_ConversationReferences[i].name));
         }
         m_ConversationDropdown.AddOptions(conversationOptions);
 
@@ -72,7 +70,7 @@ public class Tester : MonoBehaviour
         m_LocaleDropdown.ClearOptions();
         for (int i = 0; i < m_LocaleReferences.Length; i++)
         {
-            localeOptions.Add(new TMP_Dropdown.OptionData($"Locale {m_LocaleReferences[i].Id}"));
+            localeOptions.Add(new TMP_Dropdown.OptionData(m_LocaleReferences[i].name));
         }
         m_LocaleDropdown.AddOptions(localeOptions);
     }

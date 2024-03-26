@@ -12,9 +12,9 @@ namespace GameScript
         public string name;
         public string code;
         public long type;
-        public bool isCondition;
+        public bool is_condition;
         public string notes;
-        public bool isSystemCreated;
+        public bool is_system_created;
         public long parent;
 
         public static Routines FromReader(SqliteDataReader reader)
@@ -36,7 +36,7 @@ namespace GameScript
                 ? 0
                 : reader.GetInt64(3)
                 ;
-            obj.isCondition = reader.GetValue(4) is DBNull
+            obj.is_condition = reader.GetValue(4) is DBNull
                 ? false
                 : reader.GetBoolean(4)
                 ;
@@ -44,7 +44,7 @@ namespace GameScript
                 ? ""
                 : reader.GetString(5)
                 ;
-            obj.isSystemCreated = reader.GetValue(6) is DBNull
+            obj.is_system_created = reader.GetValue(6) is DBNull
                 ? false
                 : reader.GetBoolean(6)
                 ;

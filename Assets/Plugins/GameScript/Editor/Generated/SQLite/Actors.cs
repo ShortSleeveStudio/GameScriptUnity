@@ -11,8 +11,8 @@ namespace GameScript
         public long id;
         public string name;
         public string color;
-        public long localizedName;
-        public bool isSystemCreated;
+        public long localized_name;
+        public bool is_system_created;
 
         public static Actors FromReader(SqliteDataReader reader)
         {
@@ -29,11 +29,11 @@ namespace GameScript
                 ? ""
                 : reader.GetString(2)
                 ;
-            obj.localizedName = reader.GetValue(3) is DBNull
+            obj.localized_name = reader.GetValue(3) is DBNull
                 ? 0
                 : reader.GetInt64(3)
                 ;
-            obj.isSystemCreated = reader.GetValue(4) is DBNull
+            obj.is_system_created = reader.GetValue(4) is DBNull
                 ? false
                 : reader.GetBoolean(4)
                 ;
