@@ -1,3 +1,4 @@
+#if GAMESCRIPT_CODE_GENERATED
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -292,3 +293,4 @@ namespace GameScript
         #endregion
     }
 }
+#endif

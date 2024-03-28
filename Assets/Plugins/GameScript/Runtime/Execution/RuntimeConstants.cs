@@ -4,6 +4,7 @@ namespace GameScript
 {
     public static class RuntimeConstants
     {
+        public const string k_ScriptingSymbol = "GAMESCRIPT_CODE_GENERATED";
         public const string k_AppName = "GameScript";
         public const string k_Version = "0.0.0";
         public static readonly string k_ConversationDataFilename = $"{k_AppName}.dat";

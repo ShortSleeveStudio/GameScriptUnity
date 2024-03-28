@@ -1,3 +1,4 @@
+#if GAMESCRIPT_CODE_GENERATED
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -61,7 +62,8 @@ namespace GameScript
                     $"Transpilation error in routine {routine.id} at "
                     + $"line: {errorListener.ErrorLine} "
                     + $"column: {errorListener.ErrorColumn} "
-                    + $"message: {errorListener.ErrorMessage}";
+                    + $"message: {errorListener.ErrorMessage}"
+                    + $"code: {code}";
                 throw new Exception(message);
             }
         }
@@ -182,6 +184,9 @@ namespace GameScript
         #region Routine
         private void HandleRoutine(CSharpRoutineParser.RoutineContext routineContext)
         {
+            // Write sequence number
+            AppendLine(m_Accumulator, 0, "uint seq = ctx.SequenceNumber;");
+
             // Walk to tree to gather scheduled blocks
             int childCount = routineContext.ChildCount;
             for (int i = 0; i < childCount; i++)
@@ -190,7 +195,6 @@ namespace GameScript
             }
 
             // Write routine body
-            AppendLine(m_Accumulator, 0, "uint seq = ctx.SequenceNumber;");
             if (m_ScheduledBlocks.Count > 0)
             {
                 AppendLine(m_Accumulator, 0, $"ctx.SetBlocksInUse({m_ScheduledBlocks.Count});");
@@ -350,8 +354,10 @@ namespace GameScript
                     }
                     case CSharpRoutineParser.NODE:
                     {
-                        EnsureNotCondition("@node is not allowed in conditions");
-                        AppendNoLine(m_ScheduledBlocks[^1].Code, 0, "ctx.GetCurrentNode(seq)");
+                        if (m_IsBlock || m_IsCondition)
+                            AppendNoLine(m_Accumulator, 0, "ctx.GetCurrentNode(seq)");
+                        else
+                            AppendNoLine(m_ScheduledBlocks[^1].Code, 0, "ctx.GetCurrentNode(seq)");
                         break;
                     }
                     default:
@@ -432,3 +438,4 @@ namespace GameScript
         #endregion
     }
 }
+#endif

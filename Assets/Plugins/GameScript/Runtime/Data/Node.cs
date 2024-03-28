@@ -12,5 +12,6 @@ namespace GameScript
         public uint Code; // Index into routine array
         public bool IsPreventResponse;
         public Edge[] OutgoingEdges;
+        public Property[] Properties;
     }
 }

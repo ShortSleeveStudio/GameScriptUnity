@@ -97,7 +97,7 @@ public class Tester : MonoBehaviour
 
     public void OnExternalFlagPressed()
     {
-        Runner.SetFlagForAll(RoutineFlag.External);
+        // Runner.SetFlagForAll(RoutineFlag.External);
     }
 
     public void OnConversationFinished(ConversationUI conversationUI)

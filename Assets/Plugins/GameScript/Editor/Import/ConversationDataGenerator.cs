@@ -1,3 +1,4 @@
+#if GAMESCRIPT_CODE_GENERATED
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,6 +14,12 @@ namespace GameScript
 {
     static class ConversationDataGenerator
     {
+        #region Constants
+        private static readonly Comparison<Property> s_PropertyComparator = (
+            Property p1,
+            Property p2
+        ) => p1.Name.CompareTo(p2.Name);
+        #endregion
         public static ConversationDataGeneratorResult GenerateConversationData(
             string dbPath,
             string conversationDataPath,
@@ -76,6 +83,9 @@ namespace GameScript
                 connection.Open();
                 Dictionary<uint, Actor> idToActor = new();
                 Dictionary<uint, Localization> idToLocalization = new();
+                Dictionary<uint, NodePropertyTemplates> idToPropertyTemplate = new();
+                Progress.Report(progressId, 0.05f, "Gathering properties");
+                PopulatePropertyTemplateMap(connection, idToPropertyTemplate);
                 Progress.Report(progressId, 0.1f, "Gathering localizations");
                 disk.Localizations = SerializeLocalizations(connection, idToLocalization);
                 Progress.Report(progressId, 0.3f, "Gathering locales");
@@ -87,7 +97,8 @@ namespace GameScript
                     connection,
                     idToLocalization,
                     routineIdToIndex,
-                    idToActor
+                    idToActor,
+                    idToPropertyTemplate
                 );
             }
             return disk;
@@ -219,7 +230,8 @@ namespace GameScript
             SqliteConnection connection,
             Dictionary<uint, Localization> idToLocalization,
             Dictionary<uint, uint> routineIdToIndex,
-            Dictionary<uint, Actor> idToActor
+            Dictionary<uint, Actor> idToActor,
+            Dictionary<uint, NodePropertyTemplates> idToPropertyTemplate
         )
         {
             // Gather all conversation data
@@ -249,6 +261,7 @@ namespace GameScript
                             nodeIdToEdgeMissingTarget,
                             idToNode,
                             idToActor,
+                            idToPropertyTemplate,
                             out root
                         ),
                         RootNode = root,
@@ -266,6 +279,27 @@ namespace GameScript
             return conversations;
         }
 
+        static void PopulatePropertyTemplateMap(
+            SqliteConnection connection,
+            Dictionary<uint, NodePropertyTemplates> idToPropertyTemplate
+        )
+        {
+            string query = $"SELECT * FROM {EditorConstants.k_PropertyTemplateTableName};";
+            using (SqliteCommand command = connection.CreateCommand())
+            {
+                command.CommandType = CommandType.Text;
+                command.CommandText = query;
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        NodePropertyTemplates template = NodePropertyTemplates.FromReader(reader);
+                        idToPropertyTemplate[(uint)template.id] = template;
+                    }
+                }
+            }
+        }
+
         static Node[] FetchNodesForConversation(
             SqliteConnection connection,
             uint conversationId,
@@ -274,6 +308,7 @@ namespace GameScript
             Dictionary<uint, Edge> nodeIdToEdgeMissingTarget,
             Dictionary<uint, Node> idToNode,
             Dictionary<uint, Actor> idToActor,
+            Dictionary<uint, NodePropertyTemplates> idToPropertyTemplate,
             out Node rootNode
         )
         {
@@ -297,11 +332,12 @@ namespace GameScript
                         ? routineIdToIndex[(uint)node.condition]
                         : routineIdToIndex[EditorConstants.k_NoopRoutineConditionId];
                     // Handle default routines
-                    if (node.code_override != 0)
+                    if (node.code_override != -1)
                         node.code = node.code_override;
                     uint code = routineIdToIndex.ContainsKey((uint)node.code)
                         ? routineIdToIndex[(uint)node.code]
                         : routineIdToIndex[EditorConstants.k_NoopRoutineCodeId];
+
                     Node diskNode =
                         new()
                         {
@@ -367,16 +403,21 @@ namespace GameScript
                 }
             );
 
-            // Populate node's edge field
+            // Populate node's edge field and properties
             for (int i = 0; i < nodes.Length; i++)
             {
                 Node node = nodes[i];
+
+                // Edges
                 List<Edge> outgoingEdges;
                 nodeIdToOutgoingEdges.TryGetValue(node.Id, out outgoingEdges);
                 if (outgoingEdges == null)
                     node.OutgoingEdges = new Edge[0];
                 else
                     node.OutgoingEdges = nodeIdToOutgoingEdges[node.Id].ToArray();
+
+                // Properties
+                node.Properties = FetchProperties(connection, node.Id, idToPropertyTemplate);
             }
             return nodes;
         }
@@ -428,5 +469,86 @@ namespace GameScript
             }
             return objs;
         }
+
+        static Property[] FetchProperties(
+            SqliteConnection connection,
+            uint parentId,
+            Dictionary<uint, NodePropertyTemplates> idToPropertyTemplate
+        )
+        {
+            // Fetch property count
+            long count = 0;
+            string whereClause = $"WHERE parent = {parentId};";
+            using (SqliteCommand command = connection.CreateCommand())
+            {
+                command.CommandType = CommandType.Text;
+                command.CommandText =
+                    $"SELECT COUNT(*) as count FROM {EditorConstants.k_PropertiesTableName} "
+                    + $"{whereClause};";
+                using (SqliteDataReader nodeReader = command.ExecuteReader())
+                {
+                    while (nodeReader.Read())
+                        count = nodeReader.GetInt64(0);
+                }
+            }
+            if (count == 0)
+                return null;
+
+            // Fetch properties
+            Property[] properties = new Property[count];
+            string query = $"SELECT * FROM {EditorConstants.k_PropertiesTableName} {whereClause}";
+            using (SqliteCommand command = connection.CreateCommand())
+            {
+                uint j = 0;
+                command.CommandType = CommandType.Text;
+                command.CommandText = query;
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        NodeProperties property = NodeProperties.FromReader(reader);
+                        NodePropertyTemplates template = idToPropertyTemplate[
+                            (uint)property.template
+                        ];
+                        switch ((PropertyType)template.type)
+                        {
+                            case PropertyType.String:
+                                properties[j++] = new StringProperty(
+                                    template.name,
+                                    property.value_string
+                                );
+                                break;
+                            case PropertyType.Integer:
+                                properties[j++] = new IntegerProperty(
+                                    template.name,
+                                    (int)property.value_integer
+                                );
+                                break;
+                            case PropertyType.Decimal:
+                                properties[j++] = new DecimalProperty(
+                                    template.name,
+                                    (float)property.value_decimal
+                                );
+                                break;
+                            case PropertyType.Boolean:
+                                properties[j++] = new BooleanProperty(
+                                    template.name,
+                                    property.value_boolean
+                                );
+                                break;
+                            case PropertyType.Empty:
+                                properties[j++] = new EmptyProperty(template.name);
+                                break;
+                            default:
+                                throw new Exception("Encountered unknown property type");
+                        }
+                    }
+                }
+            }
+            // Must sort array to allow for binary search of needed
+            Array.Sort(properties, s_PropertyComparator);
+            return properties;
+        }
     }
 }
+#endif

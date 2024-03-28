@@ -1,4 +1,3 @@
-using System.IO;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -11,14 +10,6 @@ namespace GameScript
         #region Constants
         private static readonly string k_SettingsAsset =
             RuntimeConstants.k_SettingsAssetName + ".asset";
-        private static readonly string k_SettingsAssetPath = Path.Combine(
-            "Assets",
-            "Plugins",
-            "GameScript",
-            "Runtime",
-            "Resources",
-            k_SettingsAsset
-        );
         #endregion
 
         #region Singleton
@@ -33,11 +24,19 @@ namespace GameScript
                     if (m_Instance == null)
                     {
 #if UNITY_EDITOR
+                        string path = System.IO.Path.Combine(
+                            "Assets",
+                            "Plugins",
+                            "GameScript",
+                            "Runtime",
+                            "Resources",
+                            k_SettingsAsset
+                        );
                         Settings asset = CreateInstance<Settings>();
                         // Set default values
                         asset.InitialConversationPool = 1;
                         asset.ConversationDataPath = RuntimeConstants.k_DefaultStreamingAssetsPath;
-                        AssetDatabase.CreateAsset(asset, k_SettingsAssetPath);
+                        AssetDatabase.CreateAsset(asset, path);
                         AssetDatabase.SaveAssets();
                         m_Instance = asset;
 #else

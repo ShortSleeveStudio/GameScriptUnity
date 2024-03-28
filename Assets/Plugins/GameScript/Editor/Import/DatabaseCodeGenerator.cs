@@ -31,6 +31,7 @@ namespace GameScript
 
                 // Connect to database
                 bool foundRoutineTypes = false;
+                bool foundPropertyTypes = false;
                 List<string> tableNames = new();
                 Dictionary<string, List<DatabaseColumn>> tableToColumns = new();
                 using (
@@ -61,6 +62,31 @@ namespace GameScript
                     for (int i = 0; i < tableNames.Count; i++)
                     {
                         string tableName = tableNames[i];
+                        switch (tableName)
+                        {
+                            case EditorConstants.k_RoutineTypesTableName:
+                            {
+                                foundRoutineTypes = true;
+                                GenerateEnumFile(
+                                    FetchEnumTableData(connection, tableName),
+                                    dbCodeDirectory,
+                                    "RoutineType"
+                                );
+                                break;
+                            }
+                            case EditorConstants.k_PropertyTypesTableName:
+                            {
+                                foundPropertyTypes = true;
+                                GenerateEnumFile(
+                                    FetchEnumTableData(connection, tableName),
+                                    dbCodeDirectory,
+                                    "PropertyType"
+                                );
+                                break;
+                            }
+                        }
+
+                        // Generate type
                         using (SqliteCommand command = connection.CreateCommand())
                         {
                             // Add to map
@@ -76,13 +102,16 @@ namespace GameScript
                                 {
                                     // Column name
                                     string columnName = reader.GetString(1);
-                                    bool startsWithIs = columnName.StartsWith("is");
+                                    // TODO: make this less hacky
+                                    bool isBool =
+                                        columnName.StartsWith("is")
+                                        || columnName.EndsWith("_boolean");
                                     string columnType = reader.GetString(2);
                                     DatabaseType type;
                                     switch (columnType)
                                     {
                                         case "INTEGER":
-                                            type = startsWithIs
+                                            type = isBool
                                                 ? DatabaseType.BOOLEAN
                                                 : DatabaseType.INTEGER;
                                             break;
@@ -94,7 +123,7 @@ namespace GameScript
                                             break;
                                         default:
                                             throw new Exception(
-                                                $"Encountered unknown database type: {columnType}"
+                                                "Encountered unknown database type: " + columnType
                                             );
                                     }
                                     columns.Add(
@@ -103,40 +132,14 @@ namespace GameScript
                                 }
                             }
                         }
-                        if (tableName == EditorConstants.k_RoutineTypesTableName)
-                        {
-                            foundRoutineTypes = true;
-                            List<RoutineTypeData> routineTypes = new();
-                            using (SqliteCommand command = connection.CreateCommand())
-                            {
-                                command.CommandType = CommandType.Text;
-                                command.CommandText =
-                                    $"SELECT id, name "
-                                    + $"FROM {EditorConstants.k_RoutineTypesTableName};";
-                                using (SqliteDataReader reader = command.ExecuteReader())
-                                {
-                                    while (reader.Read())
-                                    {
-                                        int routineTypeId = reader.GetInt32(0);
-                                        string routineTypeName = reader.GetString(1);
-                                        routineTypes.Add(
-                                            new RoutineTypeData()
-                                            {
-                                                id = routineTypeId,
-                                                name = routineTypeName,
-                                            }
-                                        );
-                                    }
-                                }
-                            }
-                            GenerateRoutineTypes(routineTypes, dbCodeDirectory);
-                        }
                     }
                 }
 
-                // Ensure routine types were found/generated
+                // Ensure routine/property types were found/generated
                 if (!foundRoutineTypes)
-                    throw new Exception("Could not find routine type table");
+                    throw new Exception("Could not find routine types table");
+                if (!foundPropertyTypes)
+                    throw new Exception("Could not find property types table");
 
                 // Generate types
                 Progress.Report(progressId, 0.66f, "Generating type files");
@@ -155,11 +158,35 @@ namespace GameScript
             return result;
         }
 
-        static void GenerateRoutineTypes(List<RoutineTypeData> routineTypes, string dbCodeDirectory)
+        static List<TypeData> FetchEnumTableData(SqliteConnection connection, string tableName)
+        {
+            List<TypeData> typeData = new();
+            using (SqliteCommand command = connection.CreateCommand())
+            {
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"SELECT id, name FROM {tableName};";
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        int typeId = reader.GetInt32(0);
+                        string typeName = reader.GetString(1);
+                        typeData.Add(new TypeData() { id = typeId, name = typeName, });
+                    }
+                }
+            }
+            return typeData;
+        }
+
+        static void GenerateEnumFile(
+            List<TypeData> typeData,
+            string dbCodeDirectory,
+            string enumName
+        )
         {
             using (
                 StreamWriter writer = new StreamWriter(
-                    Path.Combine(dbCodeDirectory, "RoutineType.cs")
+                    Path.Combine(dbCodeDirectory, $"{enumName}.cs")
                 )
             )
             {
@@ -167,11 +194,11 @@ namespace GameScript
                 WriteLine(writer, 0, "");
                 WriteLine(writer, 0, $"namespace {RuntimeConstants.k_AppName}");
                 WriteLine(writer, 0, "{");
-                WriteLine(writer, 1, $"public enum RoutineType");
+                WriteLine(writer, 1, $"public enum {enumName}");
                 WriteLine(writer, 1, "{");
-                for (int i = 0; i < routineTypes.Count; i++)
+                for (int i = 0; i < typeData.Count; i++)
                 {
-                    RoutineTypeData data = routineTypes[i];
+                    TypeData data = typeData[i];
                     WriteLine(writer, 2, $"{data.name} = {data.id},");
                 }
                 WriteLine(writer, 1, "}");
@@ -306,7 +333,7 @@ namespace GameScript
             public DatabaseType type;
         }
 
-        struct RoutineTypeData
+        struct TypeData
         {
             public int id;
             public string name;

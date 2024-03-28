@@ -20,5 +20,37 @@ namespace GameScript
         {
             Debug.Log($"Current Node: {currentNode.Id}");
         }
+
+        public static void PrintProperties(Node currentNode)
+        {
+            if (currentNode.Properties != null)
+            {
+                for (int i = 0; i < currentNode.Properties.Length; i++)
+                {
+                    Property prop = currentNode.Properties[i];
+                    switch (prop)
+                    {
+                        case StringProperty stringProperty:
+                            Debug.Log(stringProperty.GetString());
+                            break;
+                        case IntegerProperty integerProperty:
+                            Debug.Log(integerProperty.GetInteger());
+                            break;
+                        case DecimalProperty decimalProperty:
+                            Debug.Log(decimalProperty.GetDecimal());
+                            break;
+                        case BooleanProperty booleanProperty:
+                            Debug.Log(booleanProperty.GetBoolean());
+                            break;
+                        case EmptyProperty:
+                            Debug.Log("empty");
+                            break;
+                        default:
+                            Debug.Log("Unknown Prop type: " + prop);
+                            break;
+                    }
+                }
+            }
+        }
     }
 }
