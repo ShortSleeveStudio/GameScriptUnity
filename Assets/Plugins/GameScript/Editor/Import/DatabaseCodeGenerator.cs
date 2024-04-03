@@ -84,6 +84,13 @@ namespace GameScript
                                 );
                                 break;
                             }
+                            case EditorConstants.k_TablesTableName:
+                                GenerateEnumFile(
+                                    FetchEnumTableData(connection, tableName),
+                                    dbCodeDirectory,
+                                    "Table"
+                                );
+                                break;
                         }
 
                         // Generate type
@@ -199,7 +206,7 @@ namespace GameScript
                 for (int i = 0; i < typeData.Count; i++)
                 {
                     TypeData data = typeData[i];
-                    WriteLine(writer, 2, $"{data.name} = {data.id},");
+                    WriteLine(writer, 2, $"{PascalCase(data.name)} = {data.id},");
                 }
                 WriteLine(writer, 1, "}");
                 WriteLine(writer, 0, "}");

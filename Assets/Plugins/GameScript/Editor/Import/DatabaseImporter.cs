@@ -171,6 +171,9 @@ namespace GameScript
 
                     // Update Settings
                     Settings.Instance.MaxFlags = transpilerResult.MaxFlags;
+
+                    // Refresh Database
+                    AssetDatabase.Refresh();
                 }
                 catch (Exception e)
                 {

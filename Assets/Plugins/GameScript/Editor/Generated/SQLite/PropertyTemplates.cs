@@ -5,16 +5,17 @@ using Mono.Data.Sqlite;
 
 namespace GameScript
 {
-    class NodePropertyTemplates
+    class PropertyTemplates
     {
-        public const string TABLE_NAME = "node_property_templates";
+        public const string TABLE_NAME = "property_templates";
         public long id;
         public string name;
+        public long parent;
         public long type;
 
-        public static NodePropertyTemplates FromReader(SqliteDataReader reader)
+        public static PropertyTemplates FromReader(SqliteDataReader reader)
         {
-            NodePropertyTemplates obj = new();
+            PropertyTemplates obj = new();
             obj.id = reader.GetValue(0) is DBNull
                 ? 0
                 : reader.GetInt64(0)
@@ -23,9 +24,13 @@ namespace GameScript
                 ? ""
                 : reader.GetString(1)
                 ;
-            obj.type = reader.GetValue(2) is DBNull
+            obj.parent = reader.GetValue(2) is DBNull
                 ? 0
                 : reader.GetInt64(2)
+                ;
+            obj.type = reader.GetValue(3) is DBNull
+                ? 0
+                : reader.GetInt64(3)
                 ;
             return obj;
         }

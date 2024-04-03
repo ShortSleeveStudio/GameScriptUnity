@@ -83,7 +83,7 @@ namespace GameScript
                 connection.Open();
                 Dictionary<uint, Actor> idToActor = new();
                 Dictionary<uint, Localization> idToLocalization = new();
-                Dictionary<uint, NodePropertyTemplates> idToPropertyTemplate = new();
+                Dictionary<uint, PropertyTemplates> idToPropertyTemplate = new();
                 Progress.Report(progressId, 0.05f, "Gathering properties");
                 PopulatePropertyTemplateMap(connection, idToPropertyTemplate);
                 Progress.Report(progressId, 0.1f, "Gathering localizations");
@@ -231,7 +231,7 @@ namespace GameScript
             Dictionary<uint, Localization> idToLocalization,
             Dictionary<uint, uint> routineIdToIndex,
             Dictionary<uint, Actor> idToActor,
-            Dictionary<uint, NodePropertyTemplates> idToPropertyTemplate
+            Dictionary<uint, PropertyTemplates> idToPropertyTemplate
         )
         {
             // Gather all conversation data
@@ -281,7 +281,7 @@ namespace GameScript
 
         static void PopulatePropertyTemplateMap(
             SqliteConnection connection,
-            Dictionary<uint, NodePropertyTemplates> idToPropertyTemplate
+            Dictionary<uint, PropertyTemplates> idToPropertyTemplate
         )
         {
             string query = $"SELECT * FROM {EditorConstants.k_PropertyTemplateTableName};";
@@ -293,7 +293,7 @@ namespace GameScript
                 {
                     while (reader.Read())
                     {
-                        NodePropertyTemplates template = NodePropertyTemplates.FromReader(reader);
+                        PropertyTemplates template = PropertyTemplates.FromReader(reader);
                         idToPropertyTemplate[(uint)template.id] = template;
                     }
                 }
@@ -308,7 +308,7 @@ namespace GameScript
             Dictionary<uint, Edge> nodeIdToEdgeMissingTarget,
             Dictionary<uint, Node> idToNode,
             Dictionary<uint, Actor> idToActor,
-            Dictionary<uint, NodePropertyTemplates> idToPropertyTemplate,
+            Dictionary<uint, PropertyTemplates> idToPropertyTemplate,
             out Node rootNode
         )
         {
@@ -473,7 +473,7 @@ namespace GameScript
         static Property[] FetchProperties(
             SqliteConnection connection,
             uint parentId,
-            Dictionary<uint, NodePropertyTemplates> idToPropertyTemplate
+            Dictionary<uint, PropertyTemplates> idToPropertyTemplate
         )
         {
             // Fetch property count
@@ -507,9 +507,7 @@ namespace GameScript
                     while (reader.Read())
                     {
                         NodeProperties property = NodeProperties.FromReader(reader);
-                        NodePropertyTemplates template = idToPropertyTemplate[
-                            (uint)property.template
-                        ];
+                        PropertyTemplates template = idToPropertyTemplate[(uint)property.template];
                         switch ((PropertyType)template.type)
                         {
                             case PropertyType.String:

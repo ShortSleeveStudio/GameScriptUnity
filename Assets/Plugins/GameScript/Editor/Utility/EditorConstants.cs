@@ -3,10 +3,11 @@ namespace GameScript
     static class EditorConstants
     {
         public const int k_SqlBatchSize = 500;
+        public const string k_TablesTableName = "tables";
+        public const string k_PropertiesTableName = "node_properties";
         public const string k_RoutineTypesTableName = "routine_types";
         public const string k_PropertyTypesTableName = "property_types";
-        public const string k_PropertiesTableName = "node_properties"; // TODO
-        public const string k_PropertyTemplateTableName = "node_property_templates"; // TODO
+        public const string k_PropertyTemplateTableName = "property_templates";
         public const string k_GeneratedCodeWarning = "GENERATED CODE - DO NOT EDIT BY HAND";
         public const string k_ContextClass = "RunnerContext";
         public const string k_RoutineDirectoryClass = "RoutineDirectory";
