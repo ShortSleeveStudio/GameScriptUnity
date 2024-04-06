@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -173,9 +174,11 @@ namespace GameScript
                 m_ContextsInactive.AddLast(new RunnerContext(Settings.Instance));
             }
             m_MainThread = Thread.CurrentThread;
+        }
 
-            // Load conversation database
-            GameData data = Database.Instance;
+        private IEnumerator Start()
+        {
+            yield return Database.Initialize();
         }
 
         private void Update()

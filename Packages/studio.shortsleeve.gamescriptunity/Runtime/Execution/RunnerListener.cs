@@ -65,9 +65,8 @@ namespace GameScript
         public void OnDecisionMade(Node node)
         {
             if (!IsValid())
-            {
                 return;
-            }
+            m_Signalled = true;
             m_OnDecisionMade(node);
         }
     }

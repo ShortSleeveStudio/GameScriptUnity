@@ -60,6 +60,7 @@ namespace GameScript
         public string DatabaseVersion;
         public string RoutinePath;
         public string ConversationDataPath;
+        public string ConversationDataPathRelative;
         #endregion
     }
 }

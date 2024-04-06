@@ -1,7 +1,10 @@
 using System;
+using System.Collections;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.Serialization.Formatters.Binary;
+using UnityEngine;
+using UnityEngine.Networking;
 
 namespace GameScript
 {
@@ -14,21 +17,40 @@ namespace GameScript
             get
             {
                 if (m_Instance == null)
+                    throw new Exception("Must call Initialize() on database before use");
+                return m_Instance;
+            }
+        }
+
+        public static IEnumerator Initialize()
+        {
+            // Get Path
+            string relativePath = Path.Combine(
+                Settings.Instance.ConversationDataPathRelative,
+                RuntimeConstants.k_ConversationDataFilename
+            );
+            string webPath = $"file://{Application.streamingAssetsPath}{relativePath}";
+
+            // Load Web Request
+            using (UnityWebRequest www = UnityWebRequest.Get(webPath))
+            {
+                // Wait for data
+                yield return www.SendWebRequest();
+
+                // Error Handling
+                if (www.result != UnityWebRequest.Result.Success)
+                    throw new Exception($"Failed to load {webPath}");
+
+                // Compose Response
+                byte[] result = www.downloadHandler.data;
+                BinaryFormatter serializer = new();
+                using (MemoryStream dataStream = new MemoryStream(result))
                 {
-                    string path = Path.Combine(
-                        Settings.Instance.ConversationDataPath,
-                        RuntimeConstants.k_ConversationDataFilename
-                    );
-                    BinaryFormatter serializer = new();
-                    using (FileStream fs = new(path, FileMode.Open))
+                    using (GZipStream zipStream = new(dataStream, CompressionMode.Decompress))
                     {
-                        using (GZipStream zipStream = new(fs, CompressionMode.Decompress))
-                        {
-                            m_Instance = (GameData)serializer.Deserialize(zipStream);
-                        }
+                        m_Instance = (GameData)serializer.Deserialize(zipStream);
                     }
                 }
-                return m_Instance;
             }
         }
         #endregion

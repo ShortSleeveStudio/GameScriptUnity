@@ -45,6 +45,13 @@ namespace GameScript
             conversationDataHeader.name = "ConversationDataHeader";
             conversationDataHeader.text = "Conversations";
 
+            // Conversation Data Path Relative (not visible)
+            TextField conversationDataPathRelative = new();
+            conversationDataPathRelative.name = "ConversationDataPathRelative";
+            conversationDataPathRelative.label = "Streaming Assets Sub-Folder Relative Path";
+            conversationDataPathRelative.bindingPath = "ConversationDataPathRelative";
+            conversationDataPathRelative.SetEnabled(false);
+
             // Conversation Data Path
             TextField conversationDataPath = new();
             conversationDataPath.name = "ConversationDataPath";
@@ -55,7 +62,11 @@ namespace GameScript
             conversationDataPath.RegisterValueChangedCallback(
                 (ChangeEvent<string> change) =>
                 {
-                    OnConversationDataPathChanged(conversationDataPath, change.newValue);
+                    OnConversationDataPathChanged(
+                        conversationDataPath,
+                        conversationDataPathRelative,
+                        change.newValue
+                    );
                 }
             );
 
@@ -195,6 +206,7 @@ namespace GameScript
 
             editorSettingsFoldout.Add(conversationDataHeader);
             editorSettingsFoldout.Add(conversationDataPath);
+            editorSettingsFoldout.Add(conversationDataPathRelative);
             editorSettingsFoldout.Add(conversationDataButton);
 
             editorSettingsFoldout.Add(databaseHeader);
@@ -209,6 +221,14 @@ namespace GameScript
             OnRoutinePathChanged(routinePathField, databaseImportButton, routinePath);
             string databasePath = serializedObject.FindProperty("DatabasePath").stringValue;
             OnDbPathChanged(databasePathField, databaseVersionField, databasePath);
+            string conversationDataPathString = serializedObject
+                .FindProperty("ConversationDataPath")
+                .stringValue;
+            OnConversationDataPathChanged(
+                conversationDataPath,
+                conversationDataPathRelative,
+                conversationDataPathString
+            );
             #endregion
 
             #region Default Inspector
@@ -227,18 +247,22 @@ namespace GameScript
         }
 
         #region Event Handlers
-        private void OnConversationDataPathChanged(TextField conversationDataPath, string newPath)
+        private void OnConversationDataPathChanged(
+            TextField conversationDataPath,
+            TextField conversationDataPathRelative,
+            string newPath
+        )
         {
             // Skip validating default path
             if (newPath == RuntimeConstants.k_DefaultStreamingAssetsPath)
-                return;
+                goto Exit;
 
             // Ensure valid path
             if (!IsValidFolder(newPath))
             {
                 Debug.LogWarning($"Conversation data folder was invalid. Resetting to default.");
                 conversationDataPath.value = RuntimeConstants.k_DefaultStreamingAssetsPath;
-                return;
+                goto Exit;
             }
 
             // Ensure exists in streaming assets
@@ -249,7 +273,16 @@ namespace GameScript
                         + "or a subfolder thereof. Resetting to default."
                 );
                 conversationDataPath.value = RuntimeConstants.k_DefaultStreamingAssetsPath;
+                goto Exit;
             }
+
+            // Set Relative Path
+            Exit:
+            if (string.IsNullOrEmpty(conversationDataPath.value))
+                return;
+            conversationDataPathRelative.value = conversationDataPath.value.Substring(
+                Application.streamingAssetsPath.Length
+            );
         }
 
         private void OnRoutinePathChanged(
