@@ -257,13 +257,8 @@ MonoBehaviour:
   m_ConversationDropdown: {fileID: 1595849385}
   m_LocaleDropdown: {fileID: 1038387752}
   m_TestSettings: {fileID: 11400000, guid: 86a9c8b75c42cbb43803cd4786e28ed7, type: 2}
-  m_ConversationReferences:
-  - {fileID: 11400000, guid: 40f5dcdc913577f40bebb82c74fc28f4, type: 2}
-  - {fileID: 11400000, guid: 8becea740ed33004291cfc2c6647b12a, type: 2}
-  m_LocaleReferences:
-  - {fileID: 11400000, guid: 8b03b43fbce81b6429162c9fa94933fe, type: 2}
-  - {fileID: 11400000, guid: d82103ce081cb8e439611287a5c4d4d9, type: 2}
-  - {fileID: 11400000, guid: b3f67d8350cc42f47a9c8df843305043, type: 2}
+  m_ConversationReferences: []
+  m_LocaleReferences: []
 --- !u!1 &118263273
 GameObject:
   m_ObjectHideFlags: 0

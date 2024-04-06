@@ -25,9 +25,8 @@ namespace GameScript
                     {
 #if UNITY_EDITOR
                         string path = System.IO.Path.Combine(
-                            "Assets",
-                            "Plugins",
-                            "GameScript",
+                            "Packages",
+                            "studio.shortsleeve.gamescriptunity",
                             "Runtime",
                             "Resources",
                             k_SettingsAsset
