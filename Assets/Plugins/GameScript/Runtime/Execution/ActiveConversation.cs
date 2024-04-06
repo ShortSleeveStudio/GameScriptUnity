@@ -17,12 +17,12 @@ namespace GameScript
 
         public bool IsActive() => Runner.IsActive(this);
 
-        public void RegisterFlagListener(Action<RoutineFlag> listener) =>
+        public void RegisterFlagListener(Action<int> listener) =>
             Runner.RegisterFlagListener(this, listener);
 
-        public void UnregisterFlagListener(Action<RoutineFlag> listener) =>
+        public void UnregisterFlagListener(Action<int> listener) =>
             Runner.UnregisterFlagListener(this, listener);
 
-        public void SetFlag(RoutineFlag flag) => Runner.SetFlag(this, flag);
+        public void SetFlag(int flag) => Runner.SetFlag(this, flag);
     }
 }

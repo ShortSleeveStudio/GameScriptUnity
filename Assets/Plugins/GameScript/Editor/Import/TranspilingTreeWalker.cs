@@ -1,10 +1,8 @@
-#if GAMESCRIPT_CODE_GENERATED
 using System;
 using System.Collections.Generic;
 using System.Text;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
-using UnityEngine;
 using static GameScript.StringWriter;
 
 namespace GameScript
@@ -162,17 +160,14 @@ namespace GameScript
                 case CSharpRoutineParser.Scheduled_block_closeContext scheduledBlockCloseContext:
                     HandleScheduledBlockClose(scheduledBlockCloseContext);
                     break;
-                case CSharpRoutineParser.LiteralContext literalContext:
-                    HandleLiteral(literalContext);
-                    break;
                 case CSharpRoutineParser.Declaration_statementContext declarationContext:
                     HandleDeclaration(declarationContext);
                     break;
-                case CSharpRoutineParser.DeclaratorContext declaratorContext:
-                    HandleDeclarator(declaratorContext);
+                case CSharpRoutineParser.Normal_nameContext normalNameContext:
+                    HandleNormalName(normalNameContext);
                     break;
-                case CSharpRoutineParser.NameContext nameContext:
-                    HandleName(nameContext);
+                case CSharpRoutineParser.Special_nameContext specialNameContext:
+                    HandleSpecialName(specialNameContext);
                     break;
                 default:
                     HandleNodeDefault(ruleNode);
@@ -213,7 +208,7 @@ namespace GameScript
                         AppendNoLine(
                             m_Accumulator,
                             0,
-                            $" && ctx.IsFlagSet({EditorConstants.k_RoutineFlagEnum}.{entryFlag})"
+                            $" && ctx.IsFlagSet((int){EditorConstants.k_RoutineFlagEnum}.{entryFlag})"
                         );
                     }
                 }
@@ -245,7 +240,7 @@ namespace GameScript
                         AppendLine(
                             m_Accumulator,
                             2,
-                            $"ctx.SetFlag({EditorConstants.k_RoutineFlagEnum}.{exitFlag});"
+                            $"ctx.SetFlag((int){EditorConstants.k_RoutineFlagEnum}.{exitFlag});"
                         );
                     }
                     AppendLine(m_Accumulator, 2, $"ctx.SetBlockFlagsFired({i});");
@@ -331,53 +326,6 @@ namespace GameScript
         }
         #endregion
 
-        #region Literals
-        private void HandleLiteral(CSharpRoutineParser.LiteralContext literal)
-        {
-            if (literal.ChildCount == 1)
-            {
-                IParseTree child = literal.GetChild(0);
-                if (!(child is ITerminalNode))
-                {
-                    throw new Exception("Literal was not a terminal node");
-                }
-                ITerminalNode terminalChild = (ITerminalNode)child;
-                switch (terminalChild.Symbol.Type)
-                {
-                    case CSharpRoutineParser.LEASE:
-                    {
-                        EnsureNotCondition("@lease is not allowed in conditions");
-                        int currentBlock = m_ScheduledBlocks.Count - 1;
-                        ScheduledBlockBuilder block = m_ScheduledBlocks[currentBlock];
-                        AppendNoLine(block.Code, 0, $"ctx.AcquireLease({currentBlock}, seq)");
-                        break;
-                    }
-                    case CSharpRoutineParser.NODE:
-                    {
-                        if (m_IsBlock || m_IsCondition)
-                            AppendNoLine(m_Accumulator, 0, "ctx.GetCurrentNode(seq)");
-                        else
-                            AppendNoLine(m_ScheduledBlocks[^1].Code, 0, "ctx.GetCurrentNode(seq)");
-                        break;
-                    }
-                    default:
-                    {
-                        Walk(child);
-                        break;
-                    }
-                }
-            }
-            else
-                throw new Exception("Encountered literal with multiple children");
-        }
-
-        private void EnsureNotCondition(string errorMessage)
-        {
-            if (m_IsCondition)
-                throw new Exception(errorMessage);
-        }
-        #endregion
-
         #region Declarations & Names
         private void HandleDeclaration(
             CSharpRoutineParser.Declaration_statementContext declarationContext
@@ -390,21 +338,45 @@ namespace GameScript
             AppendNoLine(builder, 0, ";");
         }
 
-        private void HandleDeclarator(CSharpRoutineParser.DeclaratorContext declaratorContext) =>
-            HandleDeclaratorOrName(declaratorContext.GetText());
-
-        private void HandleName(CSharpRoutineParser.NameContext nameContext) =>
-            HandleDeclaratorOrName(nameContext.GetText());
-
-        private void HandleDeclaratorOrName(string str)
+        private void HandleNormalName(CSharpRoutineParser.Normal_nameContext normalNameContext)
         {
+            string name = normalNameContext.GetText();
             StringBuilder builder = m_IsBlock ? m_Accumulator : m_ScheduledBlocks[^1].Code;
-            if (str == "seq")
+            if (name == "seq")
                 AppendNoLine(builder, 0, "_seq");
-            else if (str == "ctx")
+            else if (name == "ctx")
                 AppendNoLine(builder, 0, "_ctx");
             else
-                AppendNoLine(builder, 0, str);
+                AppendNoLine(builder, 0, name);
+        }
+
+        private void HandleSpecialName(CSharpRoutineParser.Special_nameContext specialNameContext)
+        {
+            if (specialNameContext.ChildCount != 1)
+                throw new Exception("Too many special name children");
+            IParseTree child = specialNameContext.GetChild(0);
+            if (!(child is ITerminalNode))
+                throw new Exception("Special name was not a terminal node");
+            ITerminalNode terminalNode = child as ITerminalNode;
+            switch (terminalNode.Symbol.Type)
+            {
+                case CSharpRoutineParser.NODE:
+                    if (m_IsBlock || m_IsCondition)
+                        AppendNoLine(m_Accumulator, 0, "ctx.GetCurrentNode(seq)");
+                    else
+                        AppendNoLine(m_ScheduledBlocks[^1].Code, 0, "ctx.GetCurrentNode(seq)");
+                    break;
+                case CSharpRoutineParser.LEASE:
+                    EnsureNotCondition("@lease is not allowed in conditions");
+                    int currentBlock = m_ScheduledBlocks.Count - 1;
+                    ScheduledBlockBuilder block = m_ScheduledBlocks[currentBlock];
+                    AppendNoLine(block.Code, 0, $"ctx.AcquireLease({currentBlock}, seq)");
+                    break;
+                default:
+                    throw new Exception(
+                        $"Special named contained unknown terminal node: {terminalNode.Symbol.Type}"
+                    );
+            }
         }
         #endregion
 
@@ -416,6 +388,14 @@ namespace GameScript
             {
                 Walk(ruleNode.GetChild(i));
             }
+        }
+        #endregion
+
+        #region Helper - Methods
+        private void EnsureNotCondition(string errorMessage)
+        {
+            if (m_IsCondition)
+                throw new Exception(errorMessage);
         }
         #endregion
 
@@ -438,4 +418,3 @@ namespace GameScript
         #endregion
     }
 }
-#endif

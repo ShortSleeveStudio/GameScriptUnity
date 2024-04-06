@@ -1,8 +1,6 @@
-#if GAMESCRIPT_CODE_GENERATED
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using Mono.Data.Sqlite;
 using UnityEditor;
 using UnityEngine;
@@ -145,18 +143,6 @@ namespace GameScript
             Dictionary<uint, AssetInfo<LocalizationReference>> idToLocalizationRef =
                 LoadReferenceMap<LocalizationReference>(typeof(LocalizationReference));
 
-            // Grab filter fields
-            List<FieldInfo> filterFields = new();
-            FieldInfo[] fieldInfos = typeof(Conversations).GetFields(
-                BindingFlags.Instance | BindingFlags.Public
-            );
-            for (int i = 0; i < fieldInfos.Length; i++)
-            {
-                FieldInfo info = fieldInfos[i];
-                if (info.Name.StartsWith(EditorConstants.k_FilterFieldPrefix))
-                    filterFields.Add(info);
-            }
-
             // Grab all filter names
             string[] filterNames = null;
             ImportHelpers.ReadTable(
@@ -180,13 +166,13 @@ namespace GameScript
                     Conversations conversation = Conversations.FromReader(convReader);
 
                     // Construct directory heirarchy
-                    string[] pathSegments = new string[filterFields.Count + 1];
+                    // +1 for root directory
+                    string[] pathSegments = new string[conversation.filters.Length + 1];
                     pathSegments[0] = conversationsDir;
                     string containingDirectory = conversationsDir;
-                    for (int i = 0; i < filterFields.Count; i++)
+                    for (int i = 0; i < conversation.filters.Length; i++)
                     {
-                        FieldInfo info = filterFields[i];
-                        string filterValue = (string)info.GetValue(conversation);
+                        string filterValue = conversation.filters[i];
                         if (string.IsNullOrEmpty(filterValue))
                             filterValue = "";
                         string pathSegment = filterNames[i] + "_" + SanitizeFileName(filterValue);
@@ -451,4 +437,3 @@ namespace GameScript
         #endregion
     }
 }
-#endif

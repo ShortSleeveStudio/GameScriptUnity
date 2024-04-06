@@ -34,7 +34,7 @@ namespace GameScript
                 : reader.GetInt64(3)
                 ;
             obj.json_payload = reader.GetValue(4) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(4)
                 ;
             return obj;

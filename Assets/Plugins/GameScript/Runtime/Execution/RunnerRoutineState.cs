@@ -73,9 +73,9 @@ namespace GameScript
             m_ConditionResult = result;
         }
 
-        public void SetFlag(RoutineFlag flagIndex) => m_FlagState[(int)flagIndex] = true;
+        public void SetFlag(int flagIndex) => m_FlagState[flagIndex] = true;
 
-        public bool IsFlagSet(RoutineFlag flagIndex) => m_FlagState[(int)flagIndex];
+        public bool IsFlagSet(int flagIndex) => m_FlagState[flagIndex];
 
         public void Reset()
         {

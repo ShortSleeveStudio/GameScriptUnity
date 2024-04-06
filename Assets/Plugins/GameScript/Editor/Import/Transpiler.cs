@@ -1,4 +1,3 @@
-#if GAMESCRIPT_CODE_GENERATED
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -20,8 +19,7 @@ namespace GameScript
          */
         public static TranspilerResult Transpile(
             string sqliteDatabasePath,
-            string routineOutputDirectory,
-            string flagOutputDirectory
+            string routineOutputDirectory
         )
         {
             // Create flag cache
@@ -203,7 +201,7 @@ namespace GameScript
                 }
 
                 // Write flags
-                WriteFlags(flagOutputDirectory, flagCache);
+                WriteFlags(routineOutputDirectory, flagCache);
 
                 // Report done
                 Progress.Report(progressId, 1f, "Done");
@@ -293,4 +291,3 @@ namespace GameScript
         #endregion
     }
 }
-#endif

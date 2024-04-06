@@ -16,7 +16,7 @@ namespace GameScript
         public const string k_LocaleFieldPrefix = "locale_";
         public const string k_FilterFieldPrefix = "filter_";
         public const string k_LocalizationReferenceFolderSuffix = "_localizations";
-        public const string k_LocalizationGlobalFolder = "Global";
+        public const string k_LocalizationGlobalFolder = "global_localizations";
         public const string k_ReferencesFolder = "References";
         public const string k_ReferencesOldFolder = "_OLD";
         public const string k_ReferencesTmpFolder = "_TEMPORARY";

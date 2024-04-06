@@ -215,16 +215,18 @@ namespace GameScript
 
         static void GenerateTypes(
             Dictionary<string, List<DatabaseColumn>> tableToColumns,
-            string dbCodeDirectory
+            string outputDirectory
         )
         {
             // Generate new files
             foreach (KeyValuePair<string, List<DatabaseColumn>> entry in tableToColumns)
             {
-                string friendlyTableName = PascalCase(entry.Key);
+                string tableName = entry.Key;
+                string friendlyTableName = PascalCase(tableName);
+                List<DatabaseColumn> columns = entry.Value;
                 using (
                     StreamWriter writer = new StreamWriter(
-                        Path.Combine(dbCodeDirectory, $"{friendlyTableName}.cs")
+                        Path.Combine(outputDirectory, $"{friendlyTableName}.cs")
                     )
                 )
                 {
@@ -238,14 +240,33 @@ namespace GameScript
                     WriteLine(writer, 1, $"class {friendlyTableName}");
                     WriteLine(writer, 1, "{");
                     // Table Name
-                    WriteLine(writer, 2, $"public const string TABLE_NAME = \"{entry.Key}\";");
+                    WriteLine(writer, 2, $"public const string TABLE_NAME = \"{tableName}\";");
                     // Fields
-                    for (int i = 0; i < entry.Value.Count; i++)
+                    for (int i = 0; i < columns.Count; i++)
                     {
-                        DatabaseColumn column = entry.Value[i];
-                        string columnType = DatabaseTypeToTypeString(column.type);
-                        WriteLine(writer, 2, $"public {columnType} {column.name};");
+                        DatabaseColumn column = columns[i];
+                        if (
+                            (
+                                tableName == "conversations"
+                                && column.name.StartsWith(EditorConstants.k_FilterFieldPrefix)
+                            )
+                            || (
+                                tableName == "localizations"
+                                && column.name.StartsWith(EditorConstants.k_LocaleFieldPrefix)
+                            )
+                        )
+                            break;
+                        else
+                        {
+                            string columnType = DatabaseTypeToTypeString(column.type);
+                            WriteLine(writer, 2, $"public {columnType} {column.name};");
+                        }
                     }
+                    if (tableName == "conversations")
+                        WriteLine(writer, 2, $"public string[] filters;");
+                    else if (tableName == "localizations")
+                        WriteLine(writer, 2, $"public string[] localizations;");
+
                     WriteLine(writer, 0, "");
                     // Deserializer
                     WriteLine(
@@ -255,15 +276,82 @@ namespace GameScript
                     );
                     WriteLine(writer, 2, "{");
                     WriteLine(writer, 3, $"{friendlyTableName} obj = new();");
-                    for (int i = 0; i < entry.Value.Count; i++)
+
+                    // Non-dynamic columns
+                    int dynamicColumnStart = columns.Count;
+                    for (int i = 0; i < columns.Count; i++)
                     {
-                        DatabaseColumn column = entry.Value[i];
-                        string readerMethod = DatabaseTypeToReaderMethod(column.type);
-                        WriteLine(writer, 3, $"obj.{column.name} = reader.GetValue({i}) is DBNull");
-                        WriteLine(writer, 4, $"? {DatabaseTypeToDefaultValue(column.type)}");
-                        WriteLine(writer, 4, $": reader.{readerMethod}({i})");
-                        WriteLine(writer, 4, ";");
+                        DatabaseColumn column = columns[i];
+                        if (
+                            (
+                                tableName == "conversations"
+                                && column.name.StartsWith(EditorConstants.k_FilterFieldPrefix)
+                            )
+                            || (
+                                tableName == "localizations"
+                                && column.name.StartsWith(EditorConstants.k_LocaleFieldPrefix)
+                            )
+                        )
+                        {
+                            dynamicColumnStart = i;
+                            break;
+                        }
+                        else
+                        {
+                            string readerMethod = DatabaseTypeToReaderMethod(column.type);
+                            WriteLine(
+                                writer,
+                                3,
+                                $"obj.{column.name} = reader.GetValue({i}) is DBNull"
+                            );
+                            WriteLine(writer, 4, $"? {DatabaseTypeToDefaultValue(column.type)}");
+                            WriteLine(writer, 4, $": reader.{readerMethod}({i})");
+                            WriteLine(writer, 4, ";");
+                        }
                     }
+
+                    // Dynamic columns
+                    if (tableName == "conversations")
+                    {
+                        WriteLine(
+                            writer,
+                            3,
+                            "obj.filters = "
+                                + $"new string[reader.FieldCount - {dynamicColumnStart}];"
+                        );
+                        WriteLine(writer, 3, $"for (int i = 0; i < obj.filters.Length; i++)");
+                        WriteLine(writer, 3, "{");
+                        WriteLine(writer, 4, $"int valueIndex = {dynamicColumnStart} + i;");
+                        WriteLine(
+                            writer,
+                            4,
+                            $"obj.filters[i] = reader.GetValue(valueIndex) is DBNull "
+                                + "? string.Empty "
+                                + ": reader.GetString(valueIndex);"
+                        );
+                        WriteLine(writer, 3, "}");
+                    }
+                    else if (tableName == "localizations")
+                    {
+                        WriteLine(
+                            writer,
+                            3,
+                            "obj.localizations = "
+                                + $"new string[reader.FieldCount - {dynamicColumnStart}];"
+                        );
+                        WriteLine(writer, 3, $"for (int i = 0; i < obj.localizations.Length; i++)");
+                        WriteLine(writer, 3, "{");
+                        WriteLine(writer, 4, $"int valueIndex = {dynamicColumnStart} + i;");
+                        WriteLine(
+                            writer,
+                            4,
+                            $"obj.localizations[i] = reader.GetValue(valueIndex) is DBNull "
+                                + "? string.Empty "
+                                + ": reader.GetString(valueIndex);"
+                        );
+                        WriteLine(writer, 3, "}");
+                    }
+
                     WriteLine(writer, 3, "return obj;");
                     WriteLine(writer, 2, "}");
                     WriteLine(writer, 1, "}");
@@ -277,7 +365,7 @@ namespace GameScript
             switch (type)
             {
                 case DatabaseType.TEXT:
-                    return "\"\"";
+                    return "string.Empty";
                 case DatabaseType.DECIMAL:
                     return "0d";
                 case DatabaseType.INTEGER:

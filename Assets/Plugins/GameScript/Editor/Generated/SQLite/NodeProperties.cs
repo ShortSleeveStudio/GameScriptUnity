@@ -32,7 +32,7 @@ namespace GameScript
                 : reader.GetInt64(2)
                 ;
             obj.value_string = reader.GetValue(3) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(3)
                 ;
             obj.value_integer = reader.GetValue(4) is DBNull

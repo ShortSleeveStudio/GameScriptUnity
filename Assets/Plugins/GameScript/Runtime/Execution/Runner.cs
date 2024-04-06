@@ -72,7 +72,7 @@ namespace GameScript
             return new(context.SequenceNumber, context.ContextId);
         }
 
-        public static void SetFlag(ActiveConversation active, RoutineFlag flag)
+        public static void SetFlag(ActiveConversation active, int flag)
         {
             EnsureMainThread();
             RunnerContext ctx = Instance.FindContextActive(active);
@@ -83,7 +83,7 @@ namespace GameScript
             ctx.SetFlag(flag);
         }
 
-        public static void SetFlagForAll(RoutineFlag flag)
+        public static void SetFlagForAll(int flag)
         {
             LinkedListNode<RunnerContext> node = Instance.m_ContextsActive.First;
             while (node != null)
@@ -94,10 +94,7 @@ namespace GameScript
             }
         }
 
-        public static void RegisterFlagListener(
-            ActiveConversation active,
-            Action<RoutineFlag> listener
-        )
+        public static void RegisterFlagListener(ActiveConversation active, Action<int> listener)
         {
             EnsureMainThread();
             RunnerContext ctx = Instance.FindContextActive(active);
@@ -108,10 +105,7 @@ namespace GameScript
             ctx.OnFlagRaised += listener;
         }
 
-        public static void UnregisterFlagListener(
-            ActiveConversation active,
-            Action<RoutineFlag> listener
-        )
+        public static void UnregisterFlagListener(ActiveConversation active, Action<int> listener)
         {
             EnsureMainThread();
             RunnerContext ctx = Instance.FindContextActive(active);

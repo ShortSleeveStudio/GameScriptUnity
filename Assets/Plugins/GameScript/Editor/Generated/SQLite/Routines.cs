@@ -25,11 +25,11 @@ namespace GameScript
                 : reader.GetInt64(0)
                 ;
             obj.name = reader.GetValue(1) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(1)
                 ;
             obj.code = reader.GetValue(2) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(2)
                 ;
             obj.type = reader.GetValue(3) is DBNull
@@ -41,7 +41,7 @@ namespace GameScript
                 : reader.GetBoolean(4)
                 ;
             obj.notes = reader.GetValue(5) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(5)
                 ;
             obj.is_system_created = reader.GetValue(6) is DBNull

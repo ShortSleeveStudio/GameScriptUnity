@@ -63,7 +63,7 @@ namespace GameScript
                 : reader.GetBoolean(8)
                 ;
             obj.notes = reader.GetValue(9) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(9)
                 ;
             obj.is_system_created = reader.GetValue(10) is DBNull
@@ -71,7 +71,7 @@ namespace GameScript
                 : reader.GetBoolean(10)
                 ;
             obj.type = reader.GetValue(11) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(11)
                 ;
             obj.position_x = reader.GetValue(12) is DBNull

@@ -45,7 +45,7 @@ namespace GameScript
         }
 
         #region Execution
-        internal event Action<RoutineFlag> OnFlagRaised;
+        internal event Action<int> OnFlagRaised;
 
         internal void Start(Conversation conversation, IRunnerListener listener)
         {
@@ -297,15 +297,15 @@ namespace GameScript
         #endregion
 
         #region Flags
-        public void SetFlag(RoutineFlag flag)
+        public void SetFlag(int flag)
         {
             m_RoutineState.SetFlag(flag);
             OnFlagRaised?.Invoke(flag);
         }
 
-        public bool IsFlagSet(RoutineFlag flag) => m_RoutineState.IsFlagSet(flag);
+        public bool IsFlagSet(int flag) => m_RoutineState.IsFlagSet(flag);
 
-        public void SetFlags(RoutineFlag[] flags)
+        public void SetFlags(int[] flags)
         {
             for (int i = 0; i < flags.Length; i++)
             {
@@ -313,7 +313,7 @@ namespace GameScript
             }
         }
 
-        public bool AreFlagsSet(RoutineFlag[] flags)
+        public bool AreFlagsSet(int[] flags)
         {
             for (int i = 0; i < flags.Length; i++)
             {

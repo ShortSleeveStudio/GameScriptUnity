@@ -19,7 +19,7 @@ namespace GameScript
                 : reader.GetInt64(0)
                 ;
             obj.version = reader.GetValue(1) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(1)
                 ;
             return obj;

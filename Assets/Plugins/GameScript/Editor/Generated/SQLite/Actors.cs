@@ -22,11 +22,11 @@ namespace GameScript
                 : reader.GetInt64(0)
                 ;
             obj.name = reader.GetValue(1) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(1)
                 ;
             obj.color = reader.GetValue(2) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(2)
                 ;
             obj.localized_name = reader.GetValue(3) is DBNull

@@ -213,16 +213,16 @@ namespace GameScript
 
             #region Default Inspector
             // Default Inspector Foldout
-            Foldout defaultInspectorFoldout = new Foldout();
-            defaultInspectorFoldout.name = "DefaultInspector";
-            defaultInspectorFoldout.text = "Default Inspector";
-            InspectorElement.FillDefaultInspector(defaultInspectorFoldout, serializedObject, this);
+            // Foldout defaultInspectorFoldout = new Foldout();
+            // defaultInspectorFoldout.name = "DefaultInspector";
+            // defaultInspectorFoldout.text = "Default Inspector";
+            // InspectorElement.FillDefaultInspector(defaultInspectorFoldout, serializedObject, this);
             #endregion
 
             // Add All Elements
             root.Add(runtimeSettingsFoldout);
             root.Add(editorSettingsFoldout);
-            root.Add(defaultInspectorFoldout);
+            // root.Add(defaultInspectorFoldout); // Used during developement
             return root;
         }
 

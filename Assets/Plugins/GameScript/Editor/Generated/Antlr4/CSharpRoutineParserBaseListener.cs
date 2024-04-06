@@ -678,6 +678,30 @@ public partial class CSharpRoutineParserBaseListener : ICSharpRoutineParserListe
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitName([NotNull] CSharpRoutineParser.NameContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="CSharpRoutineParser.normal_name"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterNormal_name([NotNull] CSharpRoutineParser.Normal_nameContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CSharpRoutineParser.normal_name"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitNormal_name([NotNull] CSharpRoutineParser.Normal_nameContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="CSharpRoutineParser.special_name"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterSpecial_name([NotNull] CSharpRoutineParser.Special_nameContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CSharpRoutineParser.special_name"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitSpecial_name([NotNull] CSharpRoutineParser.Special_nameContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="CSharpRoutineParser.flag_list"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

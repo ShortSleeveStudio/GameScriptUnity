@@ -21,7 +21,7 @@ namespace GameScript
                 : reader.GetInt64(0)
                 ;
             obj.name = reader.GetValue(1) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(1)
                 ;
             obj.is_system_created = reader.GetValue(2) is DBNull

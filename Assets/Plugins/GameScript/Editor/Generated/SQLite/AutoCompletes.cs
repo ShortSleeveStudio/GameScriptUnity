@@ -23,7 +23,7 @@ namespace GameScript
                 : reader.GetInt64(0)
                 ;
             obj.name = reader.GetValue(1) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(1)
                 ;
             obj.icon = reader.GetValue(2) is DBNull
@@ -35,11 +35,11 @@ namespace GameScript
                 : reader.GetInt64(3)
                 ;
             obj.insertion = reader.GetValue(4) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(4)
                 ;
             obj.documentation = reader.GetValue(5) is DBNull
-                ? ""
+                ? string.Empty
                 : reader.GetString(5)
                 ;
             return obj;

@@ -1,10 +1,8 @@
-#if GAMESCRIPT_CODE_GENERATED
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.IO.Compression;
-using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using Mono.Data.Sqlite;
 using UnityEditor;
@@ -116,19 +114,6 @@ namespace GameScript
         )
         {
             List<Localization> localizationList = new();
-
-            // Grab locale fields
-            List<FieldInfo> localizationFields = new();
-            FieldInfo[] fieldInfos = typeof(Localizations).GetFields(
-                BindingFlags.Instance | BindingFlags.Public
-            );
-            for (int i = 0; i < fieldInfos.Length; i++)
-            {
-                FieldInfo info = fieldInfos[i];
-                if (info.Name.StartsWith(EditorConstants.k_LocaleFieldPrefix))
-                    localizationFields.Add(info);
-            }
-
             ImportHelpers.ReadTable(
                 connection,
                 Localizations.TABLE_NAME,
@@ -140,19 +125,20 @@ namespace GameScript
                     // Grab list of localized strings in order of locale id, remeber if all strings
                     // are empty
                     bool allEmpty = true;
-                    string[] localizationStrings = new string[localizationFields.Count];
-                    for (int j = 0; j < localizationFields.Count; j++)
+                    for (int j = 0; j < localization.localizations.Length; j++)
                     {
-                        FieldInfo info = localizationFields[j];
-                        string localizationString = (string)info.GetValue(localization);
+                        string localizationString = localization.localizations[j];
                         if (!string.IsNullOrEmpty(localizationString))
                             allEmpty = false;
-                        localizationStrings[j] = localizationString;
                     }
 
                     // Create disk localization
                     Localization diskLocalization =
-                        new() { Id = (uint)localization.id, Localizations = localizationStrings, };
+                        new()
+                        {
+                            Id = (uint)localization.id,
+                            Localizations = localization.localizations,
+                        };
 
                     // Add disk localization to lookup table
                     idToLocalization.Add(diskLocalization.Id, allEmpty ? null : diskLocalization);
@@ -549,4 +535,3 @@ namespace GameScript
         }
     }
 }
-#endif

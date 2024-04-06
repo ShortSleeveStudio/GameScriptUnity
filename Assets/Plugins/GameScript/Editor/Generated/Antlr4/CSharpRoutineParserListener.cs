@@ -575,6 +575,26 @@ public interface ICSharpRoutineParserListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitName([NotNull] CSharpRoutineParser.NameContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="CSharpRoutineParser.normal_name"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterNormal_name([NotNull] CSharpRoutineParser.Normal_nameContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CSharpRoutineParser.normal_name"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitNormal_name([NotNull] CSharpRoutineParser.Normal_nameContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="CSharpRoutineParser.special_name"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterSpecial_name([NotNull] CSharpRoutineParser.Special_nameContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CSharpRoutineParser.special_name"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitSpecial_name([NotNull] CSharpRoutineParser.Special_nameContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="CSharpRoutineParser.flag_list"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
