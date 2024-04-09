@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07ca0588c1514074b8d9adea6bc3240d, type: 3}
   m_Name: GameScriptSettings
   m_EditorClassIdentifier: 
-  MaxFlags: 1
+  MaxFlags: 0
   InitialConversationPool: 1
-  DatabasePath: C:/Users/emful/Desktop/DATABASE/EXPORT_DATA/HELPER_DB___DO_NOT_SHIP.db
-  DatabaseVersion: 0.0.0
-  RoutinePath: D:/Work/GameScriptUnity/Assets/GameScript
+  DatabasePath: 
+  DatabaseVersion: 
+  RoutinePath: 
   ConversationDataPath: D:/Work/GameScriptUnity/Assets/StreamingAssets/GameScript
-  ConversationDataPathRelative: /GameScript
+  ConversationDataPathRelative: 

@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -24,13 +25,14 @@ namespace GameScript
                     if (m_Instance == null)
                     {
 #if UNITY_EDITOR
-                        string path = System.IO.Path.Combine(
-                            "Packages",
-                            "studio.shortsleeve.gamescriptunity",
-                            "Runtime",
-                            "Resources",
-                            k_SettingsAsset
-                        );
+                        // Create resources folder
+                        string resourcesFolder = "Assets/Resources";
+                        if (!AssetDatabase.AssetPathExists(resourcesFolder))
+                        {
+                            AssetDatabase.CreateFolder("Assets", "Resources");
+                        }
+                        string path = resourcesFolder + "/" + k_SettingsAsset;
+
                         Settings asset = CreateInstance<Settings>();
                         // Set default values
                         asset.InitialConversationPool = 1;
