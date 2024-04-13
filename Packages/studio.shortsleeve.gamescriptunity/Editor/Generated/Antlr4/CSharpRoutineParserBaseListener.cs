@@ -26,6 +26,8 @@ using ITerminalNode = Antlr4.Runtime.Tree.ITerminalNode;
 using IToken = Antlr4.Runtime.IToken;
 using ParserRuleContext = Antlr4.Runtime.ParserRuleContext;
 
+namespace GameScript
+{
 /// <summary>
 /// This class provides an empty implementation of <see cref="ICSharpRoutineParserListener"/>,
 /// which can be extended to create a listener which only needs to handle a subset
@@ -738,4 +740,5 @@ public partial class CSharpRoutineParserBaseListener : ICSharpRoutineParserListe
 	/// <inheritdoc/>
 	/// <remarks>The default implementation does nothing.</remarks>
 	public virtual void VisitErrorNode([NotNull] IErrorNode node) { }
+}
 }

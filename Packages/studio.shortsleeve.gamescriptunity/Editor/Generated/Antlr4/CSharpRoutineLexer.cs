@@ -27,6 +27,8 @@ using Antlr4.Runtime.Atn;
 using Antlr4.Runtime.Misc;
 using DFA = Antlr4.Runtime.Dfa.DFA;
 
+namespace GameScript
+{
 [System.CodeDom.Compiler.GeneratedCode("ANTLR", "4.13.1")]
 [System.CLSCompliant(false)]
 public partial class CSharpRoutineLexer : Lexer {
@@ -338,6 +340,5 @@ public partial class CSharpRoutineLexer : Lexer {
 
 	public static readonly ATN _ATN =
 		new ATNDeserializer().Deserialize(_serializedATN);
-
-
+}
 }

@@ -23,6 +23,8 @@ using Antlr4.Runtime.Misc;
 using IParseTreeListener = Antlr4.Runtime.Tree.IParseTreeListener;
 using IToken = Antlr4.Runtime.IToken;
 
+namespace GameScript
+{
 /// <summary>
 /// This interface defines a complete listener for a parse tree produced by
 /// <see cref="CSharpRoutineParser"/>.
@@ -614,4 +616,5 @@ public interface ICSharpRoutineParserListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitLiteral([NotNull] CSharpRoutineParser.LiteralContext context);
+}
 }

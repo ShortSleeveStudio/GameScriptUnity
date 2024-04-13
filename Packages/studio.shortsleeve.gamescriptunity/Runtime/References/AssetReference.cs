@@ -1,6 +1,9 @@
 using UnityEngine;
 
-public abstract class Reference : ScriptableObject
+namespace GameScript
 {
-    public uint Id;
+    public abstract class Reference : ScriptableObject
+    {
+        public uint Id;
+    }
 }
