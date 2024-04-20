@@ -44,6 +44,9 @@ namespace GameScript
         {
             try
             {
+                if (IsImporting)
+                    return;
+                IsImporting = true;
                 TranspilerResult transpilerResult = default;
                 ConversationDataGeneratorResult conversationResult = default;
                 ReferenceGeneratorResult assetResult = default;

@@ -41,9 +41,6 @@ namespace GameScript
 #pragma warning restore CS0414
 
         [SerializeField]
-        private bool m_Singleton = true;
-
-        [SerializeField]
         private bool m_DontDestroyOnLoad = true;
         #endregion
 
@@ -155,12 +152,9 @@ namespace GameScript
         private void Awake()
         {
             // Singleton
-            if (m_Singleton)
-            {
-                if (Instance != null)
-                    Debug.LogWarning("Singleton set multiple times");
-                Instance = this;
-            }
+            if (Instance != null)
+                Debug.LogWarning("Singleton set multiple times");
+            Instance = this;
 
             // Don't Destroy on Load
             if (m_DontDestroyOnLoad)
