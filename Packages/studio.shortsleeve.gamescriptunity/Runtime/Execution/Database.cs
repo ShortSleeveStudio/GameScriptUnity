@@ -24,11 +24,16 @@ namespace GameScript
 
         public static IEnumerator Initialize()
         {
-            // Get Path
+            // Raw data
+            byte[] binaryData;
+
+            // Get relative path
             string relativePath = Path.Combine(
                 Settings.Instance.ConversationDataPathRelative,
                 RuntimeConstants.k_ConversationDataFilename
             );
+
+#if UNITY_ANDROID && !UNITY_EDITOR
             string webPath = $"file://{Application.streamingAssetsPath}{relativePath}";
 
             // Load Web Request
@@ -42,16 +47,22 @@ namespace GameScript
                     throw new Exception($"Failed to load {webPath}");
 
                 // Compose Response
-                byte[] result = www.downloadHandler.data;
-                BinaryFormatter serializer = new();
-                using (MemoryStream dataStream = new MemoryStream(result))
+                binaryData = www.downloadHandler.data;
+            }
+#else
+            binaryData = File.ReadAllBytes($"{Application.streamingAssetsPath}{relativePath}");
+#endif
+
+            // Decompress and deserialize conversation data
+            BinaryFormatter serializer = new();
+            using (MemoryStream dataStream = new MemoryStream(binaryData))
+            {
+                using (GZipStream zipStream = new(dataStream, CompressionMode.Decompress))
                 {
-                    using (GZipStream zipStream = new(dataStream, CompressionMode.Decompress))
-                    {
-                        m_Instance = (GameData)serializer.Deserialize(zipStream);
-                    }
+                    m_Instance = (GameData)serializer.Deserialize(zipStream);
                 }
             }
+            yield break;
         }
         #endregion
 
