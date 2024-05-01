@@ -54,6 +54,7 @@ namespace GameScript
         #region Runtime Settings
         public uint MaxFlags;
         public uint InitialConversationPool;
+        public bool PreventSingleNodeChoices;
         #endregion
 
         #region Editor Settings

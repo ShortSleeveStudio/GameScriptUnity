@@ -22,26 +22,36 @@ namespace GameScript
 
             #region Runtime Settings
             // Max Conversations
-            IntegerField maxConversations = new IntegerField();
+            IntegerField maxConversations = new();
             maxConversations.name = "InitialConversationPool";
             maxConversations.label = "Initial Conversation Pool Size";
             maxConversations.tooltip =
                 "This will decide how many simultaneous conversations can "
                 + $"be run before {RuntimeConstants.k_AppName} needs to allocate more memory.";
             maxConversations.bindingPath = "InitialConversationPool";
+
+            // Prevent Single Node Decisions
+            Toggle preventSingleNodeChoices = new();
+            preventSingleNodeChoices.name = "PreventSingleNodeChoices";
+            preventSingleNodeChoices.label = "Prevent Single Node Choices";
+            preventSingleNodeChoices.tooltip =
+                "Normally, when a single node has UI Response Text set, it is treated as a "
+                + "choice, even if it has no 'siblings'. This will prevent that behavior.";
+            preventSingleNodeChoices.bindingPath = "PreventSingleNodeChoices";
             #endregion
 
             #region Runtime Settings Foldout
             // Runtime Settings Foldout
-            Foldout runtimeSettingsFoldout = new Foldout();
+            Foldout runtimeSettingsFoldout = new();
             runtimeSettingsFoldout.name = "RuntimeSettings";
             runtimeSettingsFoldout.text = "Runtime Settings";
             runtimeSettingsFoldout.Add(maxConversations);
+            runtimeSettingsFoldout.Add(preventSingleNodeChoices);
             #endregion
 
             #region Streaming Assets
             // Conversations Header
-            Label conversationDataHeader = new Label();
+            Label conversationDataHeader = new();
             conversationDataHeader.name = "ConversationDataHeader";
             conversationDataHeader.text = "Conversations";
 
@@ -71,7 +81,7 @@ namespace GameScript
             );
 
             // Conversation Path Button
-            Button conversationDataButton = new Button();
+            Button conversationDataButton = new();
             conversationDataButton.name = "ConversationDataButton";
             conversationDataButton.text = "Select Streaming Assets Sub-Folder";
             conversationDataButton.tooltip =
@@ -95,7 +105,7 @@ namespace GameScript
 
             #region Database
             // Database Header
-            Label databaseHeader = new Label();
+            Label databaseHeader = new();
             databaseHeader.name = "DatabaseHeader";
             databaseHeader.text = "Database";
 
@@ -126,7 +136,7 @@ namespace GameScript
             );
 
             // Select Database Button
-            Button databaseImportButton = new Button();
+            Button databaseImportButton = new();
             databaseImportButton.name = "ImportDatabase";
             databaseImportButton.text = "Import Database";
             databaseImportButton.tooltip =
@@ -162,7 +172,7 @@ namespace GameScript
 
             #region Routines
             // Routine Header
-            Label routineHeader = new Label();
+            Label routineHeader = new();
             routineHeader.name = "RoutineHeader";
             routineHeader.text = "Routines";
 
@@ -180,7 +190,7 @@ namespace GameScript
             );
 
             // Select Routine Path Button
-            Button routinePathButton = new Button();
+            Button routinePathButton = new();
             routinePathButton.name = "RoutinePathButton";
             routinePathButton.text = "Select Routine Folder";
             routinePathButton.tooltip =
@@ -197,7 +207,7 @@ namespace GameScript
             #endregion
 
             #region Editor Settings Foldout
-            Foldout editorSettingsFoldout = new Foldout();
+            Foldout editorSettingsFoldout = new();
             editorSettingsFoldout.name = "EditorSettings";
             editorSettingsFoldout.text = "Editor Settings";
             editorSettingsFoldout.Add(routineHeader);
