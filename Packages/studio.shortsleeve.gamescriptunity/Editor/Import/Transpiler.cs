@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Text.RegularExpressions;
 using Mono.Data.Sqlite;
 using UnityEditor;
 using UnityEngine;
@@ -26,9 +27,9 @@ namespace GameScript
             TranspilerResult transpilerResult = new TranspilerResult();
             HashSet<string> flagCache = new();
             Dictionary<uint, uint> routineIdToIndex = new();
-            string importString = "";
+            List<Actors> actors = new();
+            string importString;
             string routinePath = null;
-
             int progressId = 0;
             try
             {
@@ -42,27 +43,7 @@ namespace GameScript
                     connection.Open();
 
                     // Fetch imports
-                    using (SqliteCommand command = connection.CreateCommand())
-                    {
-                        command.CommandType = CommandType.Text;
-                        command.CommandText =
-                            $"SELECT * FROM {Routines.TABLE_NAME} "
-                            + $"WHERE type = '{(int)RoutineType.Import}';";
-                        using (SqliteDataReader reader = command.ExecuteReader())
-                        {
-                            bool read = false;
-                            while (reader.Read())
-                            {
-                                if (read)
-                                {
-                                    throw new Exception("More than one import routine encountered");
-                                }
-                                read = true;
-                                Routines routine = Routines.FromReader(reader);
-                                importString = routine.code;
-                            }
-                        }
-                    }
+                    importString = FetchImportString(connection);
 
                     // Fetch row count
                     long routineCount = 0;
@@ -198,10 +179,22 @@ namespace GameScript
                         WriteLine(writer, 1, "}"); // Class
                         WriteLine(writer, 0, "}"); // Namespace
                     }
+
+                    // Fetch actors
+                    using (SqliteCommand command = connection.CreateCommand())
+                    {
+                        command.CommandType = CommandType.Text;
+                        command.CommandText = $"SELECT * FROM {Actors.TABLE_NAME} ORDER BY id;";
+                        using (SqliteDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                                actors.Add(Actors.FromReader(reader));
+                        }
+                    }
                 }
 
-                // Write flags
                 WriteFlags(routineOutputDirectory, flagCache);
+                WriteActorEnums(routineOutputDirectory, actors);
 
                 // Report done
                 Progress.Report(progressId, 1f, "Done");
@@ -228,7 +221,34 @@ namespace GameScript
         #endregion
 
         #region Helpers
-        static void WriteRoutine(
+        private static string FetchImportString(SqliteConnection connection)
+        {
+            string importString = "";
+            using (SqliteCommand command = connection.CreateCommand())
+            {
+                command.CommandType = CommandType.Text;
+                command.CommandText =
+                    $"SELECT * FROM {Routines.TABLE_NAME} "
+                    + $"WHERE type = '{(int)RoutineType.Import}';";
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    bool read = false;
+                    while (reader.Read())
+                    {
+                        if (read)
+                        {
+                            throw new Exception("More than one import routine encountered");
+                        }
+                        read = true;
+                        Routines routine = Routines.FromReader(reader);
+                        importString = routine.code;
+                    }
+                }
+            }
+            return importString;
+        }
+
+        private static void WriteRoutine(
             Routines routine,
             StreamWriter writer,
             HashSet<string> flagCache,
@@ -266,7 +286,7 @@ namespace GameScript
             WriteLine(writer, 3, "};");
         }
 
-        static void WriteFlags(string outputDirectory, HashSet<string> flagCache)
+        private static void WriteFlags(string outputDirectory, HashSet<string> flagCache)
         {
             string path = Path.Combine(outputDirectory, $"{EditorConstants.k_RoutineFlagEnum}.cs");
             if (File.Exists(path))
@@ -287,6 +307,38 @@ namespace GameScript
                 WriteLine(writer, 1, "}"); // enum
                 WriteLine(writer, 0, "}"); // namespace
             }
+        }
+
+        private static void WriteActorEnums(string outputDirectory, List<Actors> actors)
+        {
+            string path = Path.Combine(outputDirectory, $"{EditorConstants.k_ActorEnum}.cs");
+            if (File.Exists(path))
+                File.Delete(path);
+
+            using (StreamWriter writer = new StreamWriter(path))
+            {
+                writer.NewLine = "\n";
+                WriteLine(writer, 0, $"// {EditorConstants.k_GeneratedCodeWarning}");
+                WriteLine(writer, 0, "");
+                WriteLine(writer, 0, $"namespace {RuntimeConstants.k_AppName}");
+                WriteLine(writer, 0, "{");
+                WriteLine(writer, 1, $"public enum {EditorConstants.k_ActorEnum} : uint");
+                WriteLine(writer, 1, "{");
+                foreach (Actors actor in actors)
+                {
+                    WriteLine(writer, 2, $"{SanitizeEnum(actor.name)} = {actor.id},");
+                }
+                WriteLine(writer, 1, "}"); // enum
+                WriteLine(writer, 0, "}"); // namespace
+            }
+        }
+
+        private static string SanitizeEnum(string name)
+        {
+            // Remove any unsupported characters
+            string sanitized = Regex.Replace(name, "[^a-zA-Z0-9]*", "");
+            // Remove any leading digits
+            return Regex.Replace(sanitized, "(^)[0-9]*", "");
         }
         #endregion
     }
