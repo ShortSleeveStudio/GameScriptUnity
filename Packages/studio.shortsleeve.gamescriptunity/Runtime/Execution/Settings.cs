@@ -4,50 +4,6 @@ namespace GameScript
 {
     public class Settings : ScriptableObject
     {
-        #region Constants
-        private static readonly string k_SettingsAsset =
-            RuntimeConstants.k_SettingsAssetName + ".asset";
-        #endregion
-
-        #region Singleton
-        private static Settings m_Instance = null;
-        public static Settings Instance
-        {
-            get
-            {
-                if (m_Instance == null)
-                {
-                    m_Instance = Resources.Load(RuntimeConstants.k_SettingsAssetName) as Settings;
-                    if (m_Instance == null)
-                    {
-#if UNITY_EDITOR
-                        // Create resources folder
-                        string resourcesFolder = "Assets/Resources";
-                        if (!UnityEditor.AssetDatabase.AssetPathExists(resourcesFolder))
-                        {
-                            UnityEditor.AssetDatabase.CreateFolder("Assets", "Resources");
-                        }
-                        string path = resourcesFolder + "/" + k_SettingsAsset;
-
-                        Settings asset = CreateInstance<Settings>();
-                        // Set default values
-                        asset.InitialConversationPool = 1;
-                        asset.ConversationDataPath = RuntimeConstants.k_DefaultStreamingAssetsPath;
-                        UnityEditor.AssetDatabase.CreateAsset(asset, path);
-                        UnityEditor.AssetDatabase.SaveAssets();
-                        m_Instance = asset;
-#else
-                        throw new System.Exception(
-                            $"{RuntimeConstants.k_AppName} settings ScriptableObject not found"
-                        );
-#endif
-                    }
-                }
-                return m_Instance;
-            }
-        }
-        #endregion
-
         #region Runtime Settings
         public uint MaxFlags;
         public uint InitialConversationPool;
@@ -57,9 +13,50 @@ namespace GameScript
         #region Editor Settings
         public string DatabasePath;
         public string DatabaseVersion;
-        public string RoutinePath;
-        public string ConversationDataPath;
-        public string ConversationDataPathRelative;
+        public string GeneratedPath;
+        public string GameDataPath;
+        public string GameDataPathRelative;
+        #endregion
+
+        #region Editor
+#if UNITY_EDITOR
+        public static Settings GetSettings()
+        {
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("t:GameScript.Settings", null);
+            Settings settings;
+            // Delete extras
+            if (guids.Length > 1)
+            {
+                for (int i = 1; i < guids.Length; i++)
+                {
+                    string pathToDelete = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[i]);
+                    Debug.LogWarning($"Deleting extra GameScript settings object: {pathToDelete}");
+                    UnityEditor.AssetDatabase.DeleteAsset(pathToDelete);
+                }
+            }
+
+            // At least one valid settings object
+            if (guids.Length > 0)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                settings = UnityEditor.AssetDatabase.LoadAssetAtPath<Settings>(path);
+            }
+            // Create if non-existant
+            else
+            {
+                settings = CreateInstance<Settings>();
+                settings.InitialConversationPool = 1;
+                settings.GameDataPath = RuntimeConstants.k_DefaultStreamingAssetsPath;
+                UnityEditor.AssetDatabase.CreateAsset(
+                    settings,
+                    $"Assets/{RuntimeConstants.k_SettingsAssetName}.asset"
+                );
+                UnityEditor.AssetDatabase.SaveAssets();
+            }
+
+            return settings;
+        }
+#endif
         #endregion
     }
 }

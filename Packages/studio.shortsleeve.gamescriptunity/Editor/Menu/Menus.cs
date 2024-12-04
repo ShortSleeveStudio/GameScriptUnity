@@ -6,8 +6,8 @@ namespace GameScript
     class Menus : MonoBehaviour
     {
         #region Public
-        [MenuItem("Tools/GameScript Settings")]
-        static void ShowSettings() => Selection.activeObject = Settings.Instance;
+        [MenuItem("GameScript/Show Settings")]
+        static void ShowSettings() => Selection.activeObject = Settings.GetSettings();
         #endregion
 
         #region Internal Developement

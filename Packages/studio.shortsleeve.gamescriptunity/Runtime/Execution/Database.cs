@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -21,25 +20,25 @@ namespace GameScript
         internal Database()
         {
             m_BinarySearchLocale = new();
+            m_BinarySearchProperty = new("");
             m_BinarySearchLocalization = new();
             m_BinarySearchConversation = new();
-            m_BinarySearchProperty = new("");
         }
         #endregion
 
         #region Public API
-        internal IEnumerator Initialize()
+        internal async Awaitable Initialize(Settings settings)
         {
             // Raw data
             byte[] binaryData;
 
             // Get relative path
             string relativePath = Path.Combine(
-                Settings.Instance.ConversationDataPathRelative,
+                settings.GameDataPathRelative,
                 RuntimeConstants.k_ConversationDataFilename
             );
 
-#if UNITY_ANDROID && !UNITY_EDITOR
+            // #if UNITY_ANDROID && !UNITY_EDITOR
             string webPath = $"file://{Application.streamingAssetsPath}{relativePath}";
 
             // Load Web Request
@@ -49,7 +48,7 @@ namespace GameScript
             )
             {
                 // Wait for data
-                yield return www.SendWebRequest();
+                await www.SendWebRequest();
 
                 // Error Handling
                 if (www.result != UnityEngine.Networking.UnityWebRequest.Result.Success)
@@ -58,9 +57,9 @@ namespace GameScript
                 // Compose Response
                 binaryData = www.downloadHandler.data;
             }
-#else
+            // #else
             binaryData = File.ReadAllBytes($"{Application.streamingAssetsPath}{relativePath}");
-#endif
+            // #endif
 
             // Decompress and deserialize conversation data
             BinaryFormatter serializer = new();
@@ -71,7 +70,6 @@ namespace GameScript
                     m_GameData = (GameData)serializer.Deserialize(zipStream);
                 }
             }
-            yield break;
         }
 
         internal Localization FindLocalization(uint localizationId) =>

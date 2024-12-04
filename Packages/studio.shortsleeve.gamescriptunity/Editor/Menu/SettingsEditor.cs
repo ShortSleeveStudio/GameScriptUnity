@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -49,41 +48,41 @@ namespace GameScript
             runtimeSettingsFoldout.Add(preventSingleNodeChoices);
             #endregion
 
-            #region Streaming Assets
-            // Conversations Header
-            Label conversationDataHeader = new();
-            conversationDataHeader.name = "ConversationDataHeader";
-            conversationDataHeader.text = "Conversations";
+            #region Runtime Database
+            // Runtime Database Header
+            Label runtimeDatabaseHeader = new();
+            runtimeDatabaseHeader.name = "RuntimeDatabaseHeader";
+            runtimeDatabaseHeader.text = "Runtime Database";
 
-            // Conversation Data Path Relative (not visible)
-            TextField conversationDataPathRelative = new();
-            conversationDataPathRelative.name = "ConversationDataPathRelative";
-            conversationDataPathRelative.label = "Streaming Assets Sub-Folder Relative Path";
-            conversationDataPathRelative.bindingPath = "ConversationDataPathRelative";
-            conversationDataPathRelative.SetEnabled(false);
+            // Runtime Database Path Relative (not visible)
+            TextField runtimeDatabasePathRelative = new();
+            runtimeDatabasePathRelative.name = "RuntimeDatabasePathRelative";
+            runtimeDatabasePathRelative.label = "Streaming Assets Sub-Folder Relative Path";
+            runtimeDatabasePathRelative.bindingPath = "GameDataPathRelative";
+            runtimeDatabasePathRelative.SetEnabled(false);
 
-            // Conversation Data Path
-            TextField conversationDataPath = new();
-            conversationDataPath.name = "ConversationDataPath";
-            conversationDataPath.label = "Streaming Assets Sub-Folder";
-            conversationDataPath.bindingPath = "ConversationDataPath";
-            conversationDataPath.tooltip = "This is where conversation data will be stored.";
-            conversationDataPath.SetEnabled(false);
-            conversationDataPath.RegisterValueChangedCallback(
+            // Runtime Database Path
+            TextField runtimeDatabasePath = new();
+            runtimeDatabasePath.name = "RuntimeDatabaseDataPath";
+            runtimeDatabasePath.label = "Streaming Assets Sub-Folder";
+            runtimeDatabasePath.bindingPath = "GameDataPath";
+            runtimeDatabasePath.tooltip = "This is where the runtime game data will be stored.";
+            runtimeDatabasePath.SetEnabled(false);
+            runtimeDatabasePath.RegisterValueChangedCallback(
                 (ChangeEvent<string> change) =>
                 {
-                    OnConversationDataPathChanged(
-                        conversationDataPath,
-                        conversationDataPathRelative,
+                    OnRuntimeDatabasePathChanged(
+                        runtimeDatabasePath,
+                        runtimeDatabasePathRelative,
                         change.newValue
                     );
                 }
             );
 
-            // Conversation Path Button
+            // Runtime Database Path Button
             Button conversationDataButton = new();
-            conversationDataButton.name = "ConversationDataButton";
-            conversationDataButton.text = "Select Streaming Assets Sub-Folder";
+            conversationDataButton.name = "RuntimeDatabaseButton";
+            conversationDataButton.text = "Select Folder";
             conversationDataButton.tooltip =
                 "Select a folder within the StreamingAssets folder to place files exported by "
                 + $"{RuntimeConstants.k_AppName} for use at runtime.";
@@ -99,17 +98,17 @@ namespace GameScript
                     streamingAssetsPath,
                     RuntimeConstants.k_AppName
                 );
-                conversationDataPath.value = path;
+                runtimeDatabasePath.value = path;
             };
             #endregion
 
-            #region Database
-            // Database Header
+            #region Editor Database
+            // Editor Database Header
             Label databaseHeader = new();
             databaseHeader.name = "DatabaseHeader";
-            databaseHeader.text = "Database";
+            databaseHeader.text = "Editor Database";
 
-            // Database Version
+            // Editor Database Version
             TextField databaseVersionField = new();
             databaseVersionField.name = "DatabaseVersion";
             databaseVersionField.label = "Version";
@@ -122,7 +121,7 @@ namespace GameScript
                 }
             );
 
-            // Database Path
+            // Editor Database Path
             TextField databasePathField = new();
             databasePathField.name = "DatabasePath";
             databasePathField.label = "Database";
@@ -135,7 +134,7 @@ namespace GameScript
                 }
             );
 
-            // Select Database Button
+            // Select Editor Database Button
             Button databaseImportButton = new();
             databaseImportButton.name = "ImportDatabase";
             databaseImportButton.text = "Import Database";
@@ -162,47 +161,61 @@ namespace GameScript
                 databasePathField.value = dbPath;
 
                 // Load database
-                string routineOutputPath = serializedObject.FindProperty("RoutinePath").stringValue;
-                string conversationOutputPath = serializedObject
-                    .FindProperty("ConversationDataPath")
+                string gameScriptOutputPath = serializedObject
+                    .FindProperty("GeneratedPath")
                     .stringValue;
-                DatabaseImporter.ImportDatabase(dbPath, routineOutputPath, conversationOutputPath);
+                string conversationOutputPath = serializedObject
+                    .FindProperty("GameDataPath")
+                    .stringValue;
+                DatabaseImporter.ImportDatabase(
+                    dbPath,
+                    gameScriptOutputPath,
+                    conversationOutputPath
+                );
             };
             #endregion
 
-            #region Routines
-            // Routine Header
-            Label routineHeader = new();
-            routineHeader.name = "RoutineHeader";
-            routineHeader.text = "Routines";
+            #region GameScript
+            // Generated Header
+            Label generatedHeader = new();
+            generatedHeader.name = "GeneratedHeader";
+            generatedHeader.text = "Generated";
 
-            // Routine Output Path
-            TextField routinePathField = new();
-            routinePathField.name = "RoutinePath";
-            routinePathField.label = "Routine Output Folder";
-            routinePathField.bindingPath = "RoutinePath";
-            routinePathField.SetEnabled(false);
-            routinePathField.RegisterValueChangedCallback(
+            // Generated Output Path
+            TextField generatedPathField = new();
+            generatedPathField.name = "GeneratedPath";
+            generatedPathField.label = "Code & References Output Folder";
+            generatedPathField.bindingPath = "GeneratedPath";
+            generatedPathField.SetEnabled(false);
+            generatedPathField.RegisterValueChangedCallback(
                 (ChangeEvent<string> change) =>
                 {
-                    OnRoutinePathChanged(routinePathField, databaseImportButton, change.newValue);
+                    OnGeneratedPathChanged(
+                        generatedPathField,
+                        databaseImportButton,
+                        change.newValue
+                    );
                 }
             );
 
-            // Select Routine Path Button
-            Button routinePathButton = new();
-            routinePathButton.name = "RoutinePathButton";
-            routinePathButton.text = "Select Routine Folder";
-            routinePathButton.tooltip =
+            // Select Generated Path Button
+            Button generatedButton = new();
+            generatedButton.name = $"{RuntimeConstants.k_AppName}PathButton";
+            generatedButton.text = $"Select Folder";
+            generatedButton.tooltip =
                 "Select a folder within the Assets folder to place files generated by "
                 + $"{RuntimeConstants.k_AppName}.";
-            routinePathButton.clickable.clicked += () =>
+            generatedButton.clickable.clicked += () =>
             {
                 // Set new path
-                string path = EditorUtility.OpenFolderPanel("Select Routine Folder", "", "");
+                string path = EditorUtility.OpenFolderPanel(
+                    $"Select {RuntimeConstants.k_AppName} Folder",
+                    "",
+                    ""
+                );
                 if (string.IsNullOrEmpty(path))
                     return;
-                routinePathField.value = path;
+                generatedPathField.value = path;
             };
             #endregion
 
@@ -210,13 +223,13 @@ namespace GameScript
             Foldout editorSettingsFoldout = new();
             editorSettingsFoldout.name = "EditorSettings";
             editorSettingsFoldout.text = "Editor Settings";
-            editorSettingsFoldout.Add(routineHeader);
-            editorSettingsFoldout.Add(routinePathField);
-            editorSettingsFoldout.Add(routinePathButton);
+            editorSettingsFoldout.Add(generatedHeader);
+            editorSettingsFoldout.Add(generatedPathField);
+            editorSettingsFoldout.Add(generatedButton);
 
-            editorSettingsFoldout.Add(conversationDataHeader);
-            editorSettingsFoldout.Add(conversationDataPath);
-            editorSettingsFoldout.Add(conversationDataPathRelative);
+            editorSettingsFoldout.Add(runtimeDatabaseHeader);
+            editorSettingsFoldout.Add(runtimeDatabasePath);
+            editorSettingsFoldout.Add(runtimeDatabasePathRelative);
             editorSettingsFoldout.Add(conversationDataButton);
 
             editorSettingsFoldout.Add(databaseHeader);
@@ -227,17 +240,17 @@ namespace GameScript
 
             #region Initialization
             // Set Initial Visibility for Database Path
-            string routinePath = serializedObject.FindProperty("RoutinePath").stringValue;
-            OnRoutinePathChanged(routinePathField, databaseImportButton, routinePath);
+            string generatedPath = serializedObject.FindProperty("GeneratedPath").stringValue;
+            OnGeneratedPathChanged(generatedPathField, databaseImportButton, generatedPath);
             string databasePath = serializedObject.FindProperty("DatabasePath").stringValue;
             OnDbPathChanged(databasePathField, databaseVersionField, databasePath);
-            string conversationDataPathString = serializedObject
-                .FindProperty("ConversationDataPath")
+            string runtimeDatabasePathString = serializedObject
+                .FindProperty("GameDataPath")
                 .stringValue;
-            OnConversationDataPathChanged(
-                conversationDataPath,
-                conversationDataPathRelative,
-                conversationDataPathString
+            OnRuntimeDatabasePathChanged(
+                runtimeDatabasePath,
+                runtimeDatabasePathRelative,
+                runtimeDatabasePathString
             );
             #endregion
 
@@ -257,9 +270,9 @@ namespace GameScript
         }
 
         #region Event Handlers
-        private void OnConversationDataPathChanged(
-            TextField conversationDataPath,
-            TextField conversationDataPathRelative,
+        private void OnRuntimeDatabasePathChanged(
+            TextField runtimeDatabasePath,
+            TextField runtimeDatabasePathRelative,
             string newPath
         )
         {
@@ -270,8 +283,8 @@ namespace GameScript
             // Ensure valid path
             if (!IsValidFolder(newPath))
             {
-                Debug.LogWarning($"Conversation data folder was invalid. Resetting to default.");
-                conversationDataPath.value = RuntimeConstants.k_DefaultStreamingAssetsPath;
+                Debug.LogWarning($"Runtime database folder was invalid. Resetting to default.");
+                runtimeDatabasePath.value = RuntimeConstants.k_DefaultStreamingAssetsPath;
                 goto Exit;
             }
 
@@ -279,24 +292,24 @@ namespace GameScript
             if (!IsValidSubFolder(newPath, Application.streamingAssetsPath))
             {
                 Debug.LogWarning(
-                    "Conversation data must go in the StreamingAssets folder "
+                    "Runtime database must go in the StreamingAssets folder "
                         + "or a subfolder thereof. Resetting to default."
                 );
-                conversationDataPath.value = RuntimeConstants.k_DefaultStreamingAssetsPath;
+                runtimeDatabasePath.value = RuntimeConstants.k_DefaultStreamingAssetsPath;
                 goto Exit;
             }
 
             // Set Relative Path
             Exit:
-            if (string.IsNullOrEmpty(conversationDataPath.value))
+            if (string.IsNullOrEmpty(runtimeDatabasePath.value))
                 return;
-            conversationDataPathRelative.value = conversationDataPath.value.Substring(
+            runtimeDatabasePathRelative.value = runtimeDatabasePath.value.Substring(
                 Application.streamingAssetsPath.Length
             );
         }
 
-        private void OnRoutinePathChanged(
-            TextField routinePathField,
+        private void OnGeneratedPathChanged(
+            TextField generatedPathField,
             Button databaseImportButton,
             string newPath
         )
@@ -304,8 +317,7 @@ namespace GameScript
             // Ensure valid path
             if (!IsValidFolder(newPath))
             {
-                Debug.LogWarning($"Routine folder folder was invalid.");
-                routinePathField.value = "";
+                generatedPathField.value = "";
                 databaseImportButton.SetEnabled(false);
                 return;
             }
@@ -313,10 +325,7 @@ namespace GameScript
             // Ensure exists in assets folder
             if (!IsValidSubFolder(newPath, Application.dataPath))
             {
-                Debug.LogWarning(
-                    "Routine folder must be in the Assets folder " + "or a subfolder thereof."
-                );
-                routinePathField.value = "";
+                generatedPathField.value = "";
                 databaseImportButton.SetEnabled(false);
                 return;
             }

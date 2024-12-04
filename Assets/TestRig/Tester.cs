@@ -79,9 +79,9 @@ public class Tester : MonoBehaviour
         m_LocaleDropdown.AddOptions(localeOptions);
     }
 
-    private IEnumerator Start()
+    private async void Start()
     {
-        yield return m_GameScriptRunner.LoadDatabase();
+        await m_GameScriptRunner.Initialize();
     }
     #endregion
 

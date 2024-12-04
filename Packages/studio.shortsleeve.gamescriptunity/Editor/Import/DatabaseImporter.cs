@@ -47,6 +47,7 @@ namespace GameScript
                 if (IsImporting)
                     return;
                 IsImporting = true;
+
                 TranspilerResult transpilerResult = default;
                 ConversationDataGeneratorResult conversationResult = default;
                 ReferenceGeneratorResult assetResult = default;
@@ -78,7 +79,7 @@ namespace GameScript
                     return;
 
                 // Update Settings
-                Settings.Instance.MaxFlags = transpilerResult.MaxFlags;
+                Settings.GetSettings().MaxFlags = transpilerResult.MaxFlags;
 
                 // Refresh Database
                 AssetDatabase.Refresh();

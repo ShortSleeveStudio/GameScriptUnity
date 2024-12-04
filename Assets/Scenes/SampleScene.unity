@@ -258,8 +258,10 @@ MonoBehaviour:
   m_ConversationDropdown: {fileID: 1595849385}
   m_LocaleDropdown: {fileID: 1038387752}
   m_TestSettings: {fileID: 11400000, guid: 86a9c8b75c42cbb43803cd4786e28ed7, type: 2}
-  m_ConversationReferences: []
-  m_LocaleReferences: []
+  m_ConversationReferences:
+  - {fileID: 11400000, guid: 99a3ad2e47d56ff4db63d7a3b39c3303, type: 2}
+  m_LocaleReferences:
+  - {fileID: 11400000, guid: da7b64951e366e34889443025aa8fdb2, type: 2}
   m_GameScriptRunner: {fileID: 81058003}
 --- !u!114 &81058003
 MonoBehaviour:
@@ -274,7 +276,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_ExecutionOrder: -1
-  m_DontDestroyOnLoad: 1
+  m_Settings: {fileID: 11400000, guid: 19dc571b8b509bc4c8ef44a4f0b703f0, type: 2}
 --- !u!1 &118263273
 GameObject:
   m_ObjectHideFlags: 0

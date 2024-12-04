@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace GameScript
 {
     [CustomEditor(typeof(GameScriptRunner))]
-    class RunnerEditor : Editor
+    class RunnerEditor : UnityEditor.Editor
     {
         // TODO
         public override VisualElement CreateInspectorGUI()

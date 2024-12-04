@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -16,7 +15,7 @@ namespace GameScript
 #pragma warning restore CS0414
 
         [SerializeField]
-        private bool m_DontDestroyOnLoad = true;
+        private Settings m_Settings;
         #endregion
 
         #region State
@@ -28,9 +27,21 @@ namespace GameScript
         #endregion
 
         #region Public API
-        public IEnumerator LoadDatabase()
+        public async Awaitable Initialize()
         {
-            yield return m_Database.Initialize();
+            // Deserialize database
+            if (m_Database != null)
+                throw new Exception("Tried to initialize GameScript more than once");
+            m_Database = new();
+            await m_Database.Initialize(m_Settings);
+
+            // Initialize runtime state
+            m_ContextsActive = new();
+            m_ContextsInactive = new();
+            for (uint i = 0; i < m_Settings.InitialConversationPool; i++)
+            {
+                m_ContextsInactive.AddLast(new RunnerContext(m_Settings));
+            }
         }
 
         public ActiveConversation StartConversation(
@@ -141,18 +152,6 @@ namespace GameScript
         #region Unity Lifecycle
         private void Awake()
         {
-            // Don't Destroy on Load
-            if (m_DontDestroyOnLoad)
-                DontDestroyOnLoad(this);
-
-            // Initialize state
-            m_Database = new();
-            m_ContextsActive = new();
-            m_ContextsInactive = new();
-            for (uint i = 0; i < Settings.Instance.InitialConversationPool; i++)
-            {
-                m_ContextsInactive.AddLast(new RunnerContext(Settings.Instance));
-            }
             m_MainThread = Thread.CurrentThread;
         }
 
@@ -183,7 +182,7 @@ namespace GameScript
             RunnerContext context;
             if (m_ContextsInactive.Count == 0)
             {
-                context = new(Settings.Instance);
+                context = new(m_Settings);
                 m_ContextsActive.AddLast(context);
             }
             else
@@ -248,6 +247,9 @@ namespace GameScript
             {
                 UnityEditor.MonoImporter.SetExecutionOrder(monoScript, m_ExecutionOrder);
             }
+
+            if (!m_Settings)
+                m_Settings = Settings.GetSettings();
         }
 #endif
         #endregion

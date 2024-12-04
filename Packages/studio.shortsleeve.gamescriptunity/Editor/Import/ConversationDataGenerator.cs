@@ -20,7 +20,7 @@ namespace GameScript
         #endregion
         public static ConversationDataGeneratorResult GenerateConversationData(
             string dbPath,
-            string conversationDataPath,
+            string gameDataPath,
             Dictionary<uint, uint> routineIdToIndex
         )
         {
@@ -32,11 +32,11 @@ namespace GameScript
                 progressId = Progress.Start("Serializing conversation graphs");
 
                 // Recreate directory
-                if (Directory.Exists(conversationDataPath))
+                if (Directory.Exists(gameDataPath))
                 {
-                    Directory.Delete(conversationDataPath, true);
+                    Directory.Delete(gameDataPath, true);
                 }
-                Directory.CreateDirectory(conversationDataPath);
+                Directory.CreateDirectory(gameDataPath);
 
                 // Create the data
                 GameData toSerialize = CreateSerializedData(progressId, dbPath, routineIdToIndex);
@@ -44,7 +44,7 @@ namespace GameScript
                 // Write to disk
                 Progress.Report(progressId, 0.7f, "Serializing data");
                 string path = Path.Combine(
-                    conversationDataPath,
+                    gameDataPath,
                     RuntimeConstants.k_ConversationDataFilename
                 );
                 BinaryFormatter serializer = new();
