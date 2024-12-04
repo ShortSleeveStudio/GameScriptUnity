@@ -8,32 +8,6 @@ namespace GameScript
 {
     public class GameScriptRunner : MonoBehaviour
     {
-        #region Editor
-#if UNITY_EDITOR
-        void OnValidate()
-        {
-            UnityEditor.MonoScript monoScript = UnityEditor.MonoScript.FromMonoBehaviour(this);
-            int currentExecutionOrder = UnityEditor.MonoImporter.GetExecutionOrder(monoScript);
-            if (currentExecutionOrder != m_ExecutionOrder)
-            {
-                UnityEditor.MonoImporter.SetExecutionOrder(monoScript, m_ExecutionOrder);
-            }
-        }
-#endif
-        #endregion
-
-        #region Singleton
-        private static GameScriptRunner Instance { get; set; }
-        #endregion
-
-        #region Private State
-        // Using linked lists so we can iterate and add
-        private LinkedList<RunnerContext> m_ContextsActive;
-        private LinkedList<RunnerContext> m_ContextsInactive;
-        private Thread m_MainThread;
-        private Database m_Database;
-        #endregion
-
         #region Inspector
         [Header("Runner Settings")]
         [SerializeField]
@@ -45,41 +19,46 @@ namespace GameScript
         private bool m_DontDestroyOnLoad = true;
         #endregion
 
-        #region API
-        public static IEnumerator LoadDatabase()
+        #region State
+        // Using linked lists so we can iterate and add
+        private LinkedList<RunnerContext> m_ContextsActive;
+        private LinkedList<RunnerContext> m_ContextsInactive;
+        private Thread m_MainThread;
+        private Database m_Database;
+        #endregion
+
+        #region Public API
+        public IEnumerator LoadDatabase()
         {
-            yield return Instance.m_Database.Initialize();
+            yield return m_Database.Initialize();
         }
 
-        public static ActiveConversation StartConversation(
+        public ActiveConversation StartConversation(
             ConversationReference conversationRef,
             IRunnerListener listener
         ) => StartConversation(conversationRef.Id, listener);
 
-        public static ActiveConversation StartConversation(
-            uint conversationId,
-            IRunnerListener listener
-        )
+        public ActiveConversation StartConversation(uint conversationId, IRunnerListener listener)
         {
-            Conversation conversation = Instance.m_Database.FindConversation(conversationId);
+            Conversation conversation = m_Database.FindConversation(conversationId);
             return StartConversation(conversation, listener);
         }
 
-        public static ActiveConversation StartConversation(
+        public ActiveConversation StartConversation(
             Conversation conversation,
             IRunnerListener listener
         )
         {
-            Instance.EnsureMainThread();
-            RunnerContext context = Instance.ContextAcquire();
+            EnsureMainThread();
+            RunnerContext context = ContextAcquire();
             context.Start(conversation, listener);
-            return new(context.SequenceNumber, context.ContextId);
+            return new(this, context.SequenceNumber, context.ContextId);
         }
 
-        public static void SetFlag(ActiveConversation active, int flag)
+        public void SetFlag(ActiveConversation active, int flag)
         {
-            Instance.EnsureMainThread();
-            RunnerContext ctx = Instance.FindContextActive(active);
+            EnsureMainThread();
+            RunnerContext ctx = FindContextActive(active);
             if (ctx == null)
                 throw new Exception(
                     "You can't set a flag for conversations that have already ended"
@@ -87,9 +66,9 @@ namespace GameScript
             ctx.SetFlag(flag);
         }
 
-        public static void SetFlagForAll(int flag)
+        public void SetFlagForAll(int flag)
         {
-            LinkedListNode<RunnerContext> node = Instance.m_ContextsActive.First;
+            LinkedListNode<RunnerContext> node = m_ContextsActive.First;
             while (node != null)
             {
                 LinkedListNode<RunnerContext> next = node.Next;
@@ -98,10 +77,10 @@ namespace GameScript
             }
         }
 
-        public static void RegisterFlagListener(ActiveConversation active, Action<int> listener)
+        public void RegisterFlagListener(ActiveConversation active, Action<int> listener)
         {
-            Instance.EnsureMainThread();
-            RunnerContext ctx = Instance.FindContextActive(active);
+            EnsureMainThread();
+            RunnerContext ctx = FindContextActive(active);
             if (ctx == null)
                 throw new Exception(
                     "You can't register a flag listener on a conversation that's already ended"
@@ -109,65 +88,59 @@ namespace GameScript
             ctx.OnFlagRaised += listener;
         }
 
-        public static void UnregisterFlagListener(ActiveConversation active, Action<int> listener)
+        public void UnregisterFlagListener(ActiveConversation active, Action<int> listener)
         {
-            Instance.EnsureMainThread();
-            RunnerContext ctx = Instance.FindContextActive(active);
+            EnsureMainThread();
+            RunnerContext ctx = FindContextActive(active);
             if (ctx == null)
                 return;
             ctx.OnFlagRaised -= listener;
         }
 
-        public static bool IsActive(ActiveConversation active)
+        public bool IsActive(ActiveConversation active)
         {
-            Instance.EnsureMainThread();
-            RunnerContext ctx = Instance.FindContextActive(active);
+            EnsureMainThread();
+            RunnerContext ctx = FindContextActive(active);
             return ctx != null;
         }
 
-        public static void StopConversation(ActiveConversation active)
+        public void StopConversation(ActiveConversation active)
         {
-            Instance.EnsureMainThread();
-            RunnerContext ctx = Instance.FindContextActive(active);
+            EnsureMainThread();
+            RunnerContext ctx = FindContextActive(active);
             if (ctx == null)
                 // we assume the conversation is already ended. Thus this call is idempotent.
                 return;
-            Instance.ContextRelease(ctx);
+            ContextRelease(ctx);
         }
 
-        public static void StopAllConversations()
+        public void StopAllConversations()
         {
-            Instance.EnsureMainThread();
-            LinkedListNode<RunnerContext> node = Instance.m_ContextsActive.First;
+            EnsureMainThread();
+            LinkedListNode<RunnerContext> node = m_ContextsActive.First;
             while (node != null)
             {
                 LinkedListNode<RunnerContext> next = node.Next;
-                Instance.ContextRelease(node);
+                ContextRelease(node);
                 node = next;
             }
         }
 
-        public static Localization FindLocalization(uint localizationId) =>
-            Instance.m_Database.FindLocalization(localizationId);
+        public Localization FindLocalization(uint localizationId) =>
+            m_Database.FindLocalization(localizationId);
 
-        public static Locale FindLocale(uint localeId) => Instance.m_Database.FindLocale(localeId);
+        public Locale FindLocale(uint localeId) => m_Database.FindLocale(localeId);
 
-        public static Conversation FindConversation(uint conversationId) =>
-            Instance.m_Database.FindConversation(conversationId);
+        public Conversation FindConversation(uint conversationId) =>
+            m_Database.FindConversation(conversationId);
 
-        public static Property FindProperty(Property[] properties, string propertyName) =>
-            Instance.m_Database.FindProperty(properties, propertyName);
-
+        public Property FindProperty(Property[] properties, string propertyName) =>
+            m_Database.FindProperty(properties, propertyName);
         #endregion
 
         #region Unity Lifecycle
         private void Awake()
         {
-            // Singleton
-            if (Instance != null)
-                Debug.LogWarning("Singleton set multiple times");
-            Instance = this;
-
             // Don't Destroy on Load
             if (m_DontDestroyOnLoad)
                 DontDestroyOnLoad(this);
@@ -263,6 +236,20 @@ namespace GameScript
             if (m_MainThread != Thread.CurrentThread)
                 throw new Exception("Runner APIs can only be used from the main thread");
         }
+        #endregion
+
+        #region Editor
+#if UNITY_EDITOR
+        void OnValidate()
+        {
+            UnityEditor.MonoScript monoScript = UnityEditor.MonoScript.FromMonoBehaviour(this);
+            int currentExecutionOrder = UnityEditor.MonoImporter.GetExecutionOrder(monoScript);
+            if (currentExecutionOrder != m_ExecutionOrder)
+            {
+                UnityEditor.MonoImporter.SetExecutionOrder(monoScript, m_ExecutionOrder);
+            }
+        }
+#endif
         #endregion
     }
 }

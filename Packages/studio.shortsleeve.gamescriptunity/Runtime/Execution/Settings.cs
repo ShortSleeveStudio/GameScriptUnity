@@ -1,7 +1,4 @@
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace GameScript
 {
@@ -26,9 +23,9 @@ namespace GameScript
 #if UNITY_EDITOR
                         // Create resources folder
                         string resourcesFolder = "Assets/Resources";
-                        if (!AssetDatabase.AssetPathExists(resourcesFolder))
+                        if (!UnityEditor.AssetDatabase.AssetPathExists(resourcesFolder))
                         {
-                            AssetDatabase.CreateFolder("Assets", "Resources");
+                            UnityEditor.AssetDatabase.CreateFolder("Assets", "Resources");
                         }
                         string path = resourcesFolder + "/" + k_SettingsAsset;
 
@@ -36,8 +33,8 @@ namespace GameScript
                         // Set default values
                         asset.InitialConversationPool = 1;
                         asset.ConversationDataPath = RuntimeConstants.k_DefaultStreamingAssetsPath;
-                        AssetDatabase.CreateAsset(asset, path);
-                        AssetDatabase.SaveAssets();
+                        UnityEditor.AssetDatabase.CreateAsset(asset, path);
+                        UnityEditor.AssetDatabase.SaveAssets();
                         m_Instance = asset;
 #else
                         throw new System.Exception(

@@ -28,6 +28,9 @@ public class Tester : MonoBehaviour
 
     [SerializeField]
     private LocaleReference[] m_LocaleReferences;
+
+    [SerializeField]
+    private GameScriptRunner m_GameScriptRunner;
     #endregion
 
     #region Editor
@@ -78,7 +81,7 @@ public class Tester : MonoBehaviour
 
     private IEnumerator Start()
     {
-        yield return GameScriptRunner.LoadDatabase();
+        yield return m_GameScriptRunner.LoadDatabase();
     }
     #endregion
 
@@ -92,13 +95,13 @@ public class Tester : MonoBehaviour
         GameObject newConversationUI = Instantiate(m_ConversationPrefab);
         newConversationUI.transform.SetParent(m_ConversationContent.transform);
         ConversationUI conversationUI = newConversationUI.GetComponent<ConversationUI>();
-        conversationUI.Initialize(conversationId, OnConversationFinished);
+        conversationUI.Initialize(m_GameScriptRunner, conversationId, OnConversationFinished);
     }
 
     public void OnLocaleSelected()
     {
         LocaleReference locale = m_LocaleReferences[m_LocaleDropdown.value];
-        m_TestSettings.CurrentLocale = GameScriptRunner.FindLocale(locale.Id);
+        m_TestSettings.CurrentLocale = m_GameScriptRunner.FindLocale(locale.Id);
     }
 
     public void OnConversationFinished(ConversationUI conversationUI)

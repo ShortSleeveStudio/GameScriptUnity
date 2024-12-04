@@ -34,20 +34,26 @@ public class ConversationUI : MonoBehaviour, IRunnerListener
     #region State
     private Action<ConversationUI> m_OnComplete;
     private ActiveConversation m_ActiveConversation;
+    private GameScriptRunner m_GameScriptRunner;
     #endregion
 
     #region Initialization
-    public void Initialize(uint conversationId, Action<ConversationUI> onComplete)
+    public void Initialize(
+        GameScriptRunner runner,
+        uint conversationId,
+        Action<ConversationUI> onComplete
+    )
     {
+        m_GameScriptRunner = runner;
         m_OnComplete = onComplete;
-        m_ActiveConversation = GameScriptRunner.StartConversation(conversationId, this);
+        m_ActiveConversation = m_GameScriptRunner.StartConversation(conversationId, this);
     }
     #endregion
 
     #region Handlers
     public void Stop()
     {
-        GameScriptRunner.StopConversation(m_ActiveConversation);
+        m_GameScriptRunner.StopConversation(m_ActiveConversation);
         m_OnComplete(this);
     }
     #endregion

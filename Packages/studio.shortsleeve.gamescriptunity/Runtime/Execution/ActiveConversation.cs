@@ -4,25 +4,31 @@ namespace GameScript
 {
     public struct ActiveConversation
     {
+        internal GameScriptRunner Runner;
         internal uint SequenceNumber;
         internal uint ContextId;
 
-        internal ActiveConversation(uint sequenceToken, uint cancellationToken)
+        internal ActiveConversation(
+            GameScriptRunner runner,
+            uint sequenceToken,
+            uint cancellationToken
+        )
         {
+            Runner = runner;
             SequenceNumber = sequenceToken;
             ContextId = cancellationToken;
         }
 
-        public void Stop() => GameScriptRunner.StopConversation(this);
+        public void Stop() => Runner.StopConversation(this);
 
-        public bool IsActive() => GameScriptRunner.IsActive(this);
+        public bool IsActive() => Runner.IsActive(this);
 
         public void RegisterFlagListener(Action<int> listener) =>
-            GameScriptRunner.RegisterFlagListener(this, listener);
+            Runner.RegisterFlagListener(this, listener);
 
         public void UnregisterFlagListener(Action<int> listener) =>
-            GameScriptRunner.UnregisterFlagListener(this, listener);
+            Runner.UnregisterFlagListener(this, listener);
 
-        public void SetFlag(int flag) => GameScriptRunner.SetFlag(this, flag);
+        public void SetFlag(int flag) => Runner.SetFlag(this, flag);
     }
 }
