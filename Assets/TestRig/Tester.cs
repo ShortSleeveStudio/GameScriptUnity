@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using GameScript;
 using TMPro;
@@ -74,6 +75,11 @@ public class Tester : MonoBehaviour
         }
         m_LocaleDropdown.AddOptions(localeOptions);
     }
+
+    private IEnumerator Start()
+    {
+        yield return GameScriptRunner.LoadDatabase();
+    }
     #endregion
 
     #region Handlers
@@ -92,7 +98,7 @@ public class Tester : MonoBehaviour
     public void OnLocaleSelected()
     {
         LocaleReference locale = m_LocaleReferences[m_LocaleDropdown.value];
-        m_TestSettings.CurrentLocale = Database.FindLocale(locale.Id);
+        m_TestSettings.CurrentLocale = GameScriptRunner.FindLocale(locale.Id);
     }
 
     public void OnConversationFinished(ConversationUI conversationUI)

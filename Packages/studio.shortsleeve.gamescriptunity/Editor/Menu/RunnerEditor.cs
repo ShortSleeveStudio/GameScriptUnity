@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 
 namespace GameScript
 {
-    [CustomEditor(typeof(Runner))]
+    [CustomEditor(typeof(GameScriptRunner))]
     class RunnerEditor : Editor
     {
         // TODO

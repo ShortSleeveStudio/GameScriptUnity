@@ -4,25 +4,31 @@ using System.IO;
 using System.IO.Compression;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace GameScript
 {
-    public class Database
+    internal class Database
     {
-        #region Singleton
-        private static GameData m_Instance;
-        public static GameData Instance
-        {
-            get
-            {
-                if (m_Instance == null)
-                    throw new Exception("Must call Initialize() on database before use");
-                return m_Instance;
-            }
-        }
+        #region State
+        private Locale m_BinarySearchLocale;
+        private GameData m_GameData;
+        private Localization m_BinarySearchLocalization;
+        private Conversation m_BinarySearchConversation;
+        private EmptyProperty m_BinarySearchProperty;
+        #endregion
 
-        public static IEnumerator Initialize()
+        #region Constructor
+        internal Database()
+        {
+            m_BinarySearchLocale = new();
+            m_BinarySearchLocalization = new();
+            m_BinarySearchConversation = new();
+            m_BinarySearchProperty = new("");
+        }
+        #endregion
+
+        #region Public API
+        internal IEnumerator Initialize()
         {
             // Raw data
             byte[] binaryData;
@@ -37,13 +43,16 @@ namespace GameScript
             string webPath = $"file://{Application.streamingAssetsPath}{relativePath}";
 
             // Load Web Request
-            using (UnityWebRequest www = UnityWebRequest.Get(webPath))
+            using (
+                UnityEngine.Networking.UnityWebRequest www =
+                    UnityEngine.Networking.UnityWebRequest.Get(webPath)
+            )
             {
                 // Wait for data
                 yield return www.SendWebRequest();
 
                 // Error Handling
-                if (www.result != UnityWebRequest.Result.Success)
+                if (www.result != UnityEngine.Networking.UnityWebRequest.Result.Success)
                     throw new Exception($"Failed to load {webPath}");
 
                 // Compose Response
@@ -59,40 +68,33 @@ namespace GameScript
             {
                 using (GZipStream zipStream = new(dataStream, CompressionMode.Decompress))
                 {
-                    m_Instance = (GameData)serializer.Deserialize(zipStream);
+                    m_GameData = (GameData)serializer.Deserialize(zipStream);
                 }
             }
             yield break;
         }
-        #endregion
 
-        #region Static State
-        private static Locale s_BinarySearchLocale = new();
-        private static Localization s_BinarySearchLocalization = new();
-        private static Conversation s_BinarySearchConversation = new();
-        private static EmptyProperty s_BinarySearchProperty = new("");
-        #endregion
+        internal Localization FindLocalization(uint localizationId) =>
+            Find(localizationId, m_BinarySearchLocalization, m_GameData.Localizations);
 
-        #region Static Methods
-        public static Localization FindLocalization(uint localizationId) =>
-            Find(localizationId, s_BinarySearchLocalization, Instance.Localizations);
+        internal Locale FindLocale(uint localeId) =>
+            Find(localeId, m_BinarySearchLocale, m_GameData.Locales);
 
-        public static Locale FindLocale(uint localeId) =>
-            Find(localeId, s_BinarySearchLocale, Instance.Locales);
+        internal Conversation FindConversation(uint conversationId) =>
+            Find(conversationId, m_BinarySearchConversation, m_GameData.Conversations);
 
-        public static Conversation FindConversation(uint conversationId) =>
-            Find(conversationId, s_BinarySearchConversation, Instance.Conversations);
-
-        public static Property FindProperty(Property[] properties, string propertyName)
+        internal Property FindProperty(Property[] properties, string propertyName)
         {
-            s_BinarySearchProperty.SetName(propertyName);
-            int index = Array.BinarySearch(properties, s_BinarySearchProperty);
+            m_BinarySearchProperty.SetName(propertyName);
+            int index = Array.BinarySearch(properties, m_BinarySearchProperty);
             if (index == -1)
                 return null;
             return properties[index];
         }
+        #endregion
 
-        private static T Find<T>(uint id, T searchBuddy, T[] arr)
+        #region Private API
+        private T Find<T>(uint id, T searchBuddy, T[] arr)
             where T : BaseData<T>
         {
             searchBuddy.Id = id;

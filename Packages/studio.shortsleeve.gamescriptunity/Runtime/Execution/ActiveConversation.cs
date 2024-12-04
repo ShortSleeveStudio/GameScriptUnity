@@ -13,16 +13,16 @@ namespace GameScript
             ContextId = cancellationToken;
         }
 
-        public void Stop() => Runner.StopConversation(this);
+        public void Stop() => GameScriptRunner.StopConversation(this);
 
-        public bool IsActive() => Runner.IsActive(this);
+        public bool IsActive() => GameScriptRunner.IsActive(this);
 
         public void RegisterFlagListener(Action<int> listener) =>
-            Runner.RegisterFlagListener(this, listener);
+            GameScriptRunner.RegisterFlagListener(this, listener);
 
         public void UnregisterFlagListener(Action<int> listener) =>
-            Runner.UnregisterFlagListener(this, listener);
+            GameScriptRunner.UnregisterFlagListener(this, listener);
 
-        public void SetFlag(int flag) => Runner.SetFlag(this, flag);
+        public void SetFlag(int flag) => GameScriptRunner.SetFlag(this, flag);
     }
 }

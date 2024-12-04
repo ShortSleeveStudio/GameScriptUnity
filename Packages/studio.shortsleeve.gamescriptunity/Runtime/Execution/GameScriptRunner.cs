@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace GameScript
 {
-    public class Runner : MonoBehaviour
+    public class GameScriptRunner : MonoBehaviour
     {
         #region Editor
 #if UNITY_EDITOR
@@ -23,7 +23,7 @@ namespace GameScript
         #endregion
 
         #region Singleton
-        private static Runner Instance { get; set; }
+        private static GameScriptRunner Instance { get; set; }
         #endregion
 
         #region Private State
@@ -31,9 +31,10 @@ namespace GameScript
         private LinkedList<RunnerContext> m_ContextsActive;
         private LinkedList<RunnerContext> m_ContextsInactive;
         private Thread m_MainThread;
+        private Database m_Database;
         #endregion
 
-        #region Inspector Variables
+        #region Inspector
         [Header("Runner Settings")]
         [SerializeField]
 #pragma warning disable CS0414
@@ -45,6 +46,11 @@ namespace GameScript
         #endregion
 
         #region API
+        public static IEnumerator LoadDatabase()
+        {
+            yield return Instance.m_Database.Initialize();
+        }
+
         public static ActiveConversation StartConversation(
             ConversationReference conversationRef,
             IRunnerListener listener
@@ -55,7 +61,7 @@ namespace GameScript
             IRunnerListener listener
         )
         {
-            Conversation conversation = Database.FindConversation(conversationId);
+            Conversation conversation = Instance.m_Database.FindConversation(conversationId);
             return StartConversation(conversation, listener);
         }
 
@@ -64,7 +70,7 @@ namespace GameScript
             IRunnerListener listener
         )
         {
-            EnsureMainThread();
+            Instance.EnsureMainThread();
             RunnerContext context = Instance.ContextAcquire();
             context.Start(conversation, listener);
             return new(context.SequenceNumber, context.ContextId);
@@ -72,7 +78,7 @@ namespace GameScript
 
         public static void SetFlag(ActiveConversation active, int flag)
         {
-            EnsureMainThread();
+            Instance.EnsureMainThread();
             RunnerContext ctx = Instance.FindContextActive(active);
             if (ctx == null)
                 throw new Exception(
@@ -94,7 +100,7 @@ namespace GameScript
 
         public static void RegisterFlagListener(ActiveConversation active, Action<int> listener)
         {
-            EnsureMainThread();
+            Instance.EnsureMainThread();
             RunnerContext ctx = Instance.FindContextActive(active);
             if (ctx == null)
                 throw new Exception(
@@ -105,7 +111,7 @@ namespace GameScript
 
         public static void UnregisterFlagListener(ActiveConversation active, Action<int> listener)
         {
-            EnsureMainThread();
+            Instance.EnsureMainThread();
             RunnerContext ctx = Instance.FindContextActive(active);
             if (ctx == null)
                 return;
@@ -114,14 +120,14 @@ namespace GameScript
 
         public static bool IsActive(ActiveConversation active)
         {
-            EnsureMainThread();
+            Instance.EnsureMainThread();
             RunnerContext ctx = Instance.FindContextActive(active);
             return ctx != null;
         }
 
         public static void StopConversation(ActiveConversation active)
         {
-            EnsureMainThread();
+            Instance.EnsureMainThread();
             RunnerContext ctx = Instance.FindContextActive(active);
             if (ctx == null)
                 // we assume the conversation is already ended. Thus this call is idempotent.
@@ -131,7 +137,7 @@ namespace GameScript
 
         public static void StopAllConversations()
         {
-            EnsureMainThread();
+            Instance.EnsureMainThread();
             LinkedListNode<RunnerContext> node = Instance.m_ContextsActive.First;
             while (node != null)
             {
@@ -141,14 +147,20 @@ namespace GameScript
             }
         }
 
-        private static void EnsureMainThread()
-        {
-            if (Instance.m_MainThread != Thread.CurrentThread)
-                throw new Exception("Runner APIs can only be used from the main thread");
-        }
+        public static Localization FindLocalization(uint localizationId) =>
+            Instance.m_Database.FindLocalization(localizationId);
+
+        public static Locale FindLocale(uint localeId) => Instance.m_Database.FindLocale(localeId);
+
+        public static Conversation FindConversation(uint conversationId) =>
+            Instance.m_Database.FindConversation(conversationId);
+
+        public static Property FindProperty(Property[] properties, string propertyName) =>
+            Instance.m_Database.FindProperty(properties, propertyName);
+
         #endregion
 
-        #region Unity Lifecycle Methods
+        #region Unity Lifecycle
         private void Awake()
         {
             // Singleton
@@ -161,6 +173,7 @@ namespace GameScript
                 DontDestroyOnLoad(this);
 
             // Initialize state
+            m_Database = new();
             m_ContextsActive = new();
             m_ContextsInactive = new();
             for (uint i = 0; i < Settings.Instance.InitialConversationPool; i++)
@@ -168,11 +181,6 @@ namespace GameScript
                 m_ContextsInactive.AddLast(new RunnerContext(Settings.Instance));
             }
             m_MainThread = Thread.CurrentThread;
-        }
-
-        private IEnumerator Start()
-        {
-            yield return Database.Initialize();
         }
 
         private void Update()
@@ -248,6 +256,12 @@ namespace GameScript
                 node = next;
             }
             return null;
+        }
+
+        private void EnsureMainThread()
+        {
+            if (m_MainThread != Thread.CurrentThread)
+                throw new Exception("Runner APIs can only be used from the main thread");
         }
         #endregion
     }

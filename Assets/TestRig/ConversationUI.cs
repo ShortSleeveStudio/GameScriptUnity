@@ -40,14 +40,14 @@ public class ConversationUI : MonoBehaviour, IRunnerListener
     public void Initialize(uint conversationId, Action<ConversationUI> onComplete)
     {
         m_OnComplete = onComplete;
-        m_ActiveConversation = Runner.StartConversation(conversationId, this);
+        m_ActiveConversation = GameScriptRunner.StartConversation(conversationId, this);
     }
     #endregion
 
     #region Handlers
     public void Stop()
     {
-        Runner.StopConversation(m_ActiveConversation);
+        GameScriptRunner.StopConversation(m_ActiveConversation);
         m_OnComplete(this);
     }
     #endregion
