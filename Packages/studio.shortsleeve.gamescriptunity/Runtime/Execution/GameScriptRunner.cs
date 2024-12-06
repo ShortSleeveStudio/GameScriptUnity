@@ -27,6 +27,8 @@ namespace GameScript
         #endregion
 
         #region Public API
+        public GameData GameData => m_Database.GameData;
+
         public async Awaitable Initialize()
         {
             // Deserialize database
@@ -46,10 +48,13 @@ namespace GameScript
 
         public ActiveConversation StartConversation(
             ConversationReference conversationRef,
-            IRunnerListener listener
+            IGameScriptListener listener
         ) => StartConversation(conversationRef.Id, listener);
 
-        public ActiveConversation StartConversation(uint conversationId, IRunnerListener listener)
+        public ActiveConversation StartConversation(
+            uint conversationId,
+            IGameScriptListener listener
+        )
         {
             Conversation conversation = m_Database.FindConversation(conversationId);
             return StartConversation(conversation, listener);
@@ -57,7 +62,7 @@ namespace GameScript
 
         public ActiveConversation StartConversation(
             Conversation conversation,
-            IRunnerListener listener
+            IGameScriptListener listener
         )
         {
             EnsureMainThread();

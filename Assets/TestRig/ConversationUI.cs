@@ -5,7 +5,7 @@ using GameScript;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ConversationUI : MonoBehaviour, IRunnerListener
+public class ConversationUI : MonoBehaviour, IGameScriptListener
 {
     #region Constants
     private const int k_ReadTimeMillis = 1000;

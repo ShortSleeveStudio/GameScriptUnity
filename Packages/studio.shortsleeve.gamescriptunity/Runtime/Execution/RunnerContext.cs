@@ -23,7 +23,7 @@ namespace GameScript
         private RunnerRoutineState m_RoutineState;
         private Conversation m_Conversation;
         private Node m_Node;
-        private IRunnerListener m_Listener;
+        private IGameScriptListener m_Listener;
         private bool m_OnReadyCalled;
         private Action m_OnReady;
         private Node m_OnDecisionMadeValue;
@@ -49,7 +49,7 @@ namespace GameScript
         #region Execution
         internal event Action<int> OnFlagRaised;
 
-        internal void Start(Conversation conversation, IRunnerListener listener)
+        internal void Start(Conversation conversation, IGameScriptListener listener)
         {
             m_Node = conversation.RootNode;
             m_Listener = listener;

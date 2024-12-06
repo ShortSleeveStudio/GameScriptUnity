@@ -27,7 +27,11 @@ namespace GameScript
         #endregion
 
         #region Public API
+        internal GameData GameData => m_GameData;
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         internal async Awaitable Initialize(Settings settings)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             // Raw data
             byte[] binaryData;
@@ -38,7 +42,7 @@ namespace GameScript
                 RuntimeConstants.k_ConversationDataFilename
             );
 
-            // #if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR
             string webPath = $"file://{Application.streamingAssetsPath}{relativePath}";
 
             // Load Web Request
@@ -57,9 +61,9 @@ namespace GameScript
                 // Compose Response
                 binaryData = www.downloadHandler.data;
             }
-            // #else
+#else
             binaryData = File.ReadAllBytes($"{Application.streamingAssetsPath}{relativePath}");
-            // #endif
+#endif
 
             // Decompress and deserialize conversation data
             BinaryFormatter serializer = new();

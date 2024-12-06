@@ -71,8 +71,8 @@ namespace GameScript
         }
     }
 
-    /**Runner listeners can react to changes in conversation runner state.*/
-    public interface IRunnerListener
+    /**GameScript listeners can react to changes in conversation runner state.*/
+    public interface IGameScriptListener
     {
         /**
          * Called before the conversation starts.
