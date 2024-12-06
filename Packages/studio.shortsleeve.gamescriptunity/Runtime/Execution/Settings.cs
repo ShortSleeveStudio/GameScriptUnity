@@ -47,11 +47,15 @@ namespace GameScript
                 settings = CreateInstance<Settings>();
                 settings.InitialConversationPool = 1;
                 settings.GameDataPath = RuntimeConstants.k_DefaultStreamingAssetsPath;
-                UnityEditor.AssetDatabase.CreateAsset(
-                    settings,
-                    $"Assets/{RuntimeConstants.k_SettingsAssetName}.asset"
-                );
-                UnityEditor.AssetDatabase.SaveAssets();
+                // This is called in OnValidate
+                UnityEditor.EditorApplication.delayCall += () =>
+                {
+                    UnityEditor.AssetDatabase.CreateAsset(
+                        settings,
+                        $"Assets/{RuntimeConstants.k_SettingsAssetName}.asset"
+                    );
+                    UnityEditor.AssetDatabase.SaveAssets();
+                };
             }
 
             return settings;
