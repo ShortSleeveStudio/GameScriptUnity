@@ -101,7 +101,7 @@ public class Tester : MonoBehaviour
     public void OnLocaleSelected()
     {
         LocaleReference locale = m_LocaleReferences[m_LocaleDropdown.value];
-        m_TestSettings.CurrentLocale = m_GameScriptRunner.FindLocale(locale.Id);
+        m_TestSettings.CurrentLocale = m_GameScriptRunner.Database.FindLocale(locale.Id);
     }
 
     public void OnConversationFinished(ConversationUI conversationUI)

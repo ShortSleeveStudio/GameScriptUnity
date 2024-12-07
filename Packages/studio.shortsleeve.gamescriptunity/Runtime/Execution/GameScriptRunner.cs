@@ -141,17 +141,6 @@ namespace GameScript
                 node = next;
             }
         }
-
-        public Localization FindLocalization(uint localizationId) =>
-            m_Database.FindLocalization(localizationId);
-
-        public Locale FindLocale(uint localeId) => m_Database.FindLocale(localeId);
-
-        public Conversation FindConversation(uint conversationId) =>
-            m_Database.FindConversation(conversationId);
-
-        public Property FindProperty(Property[] properties, string propertyName) =>
-            m_Database.FindProperty(properties, propertyName);
         #endregion
 
         #region Unity Lifecycle
