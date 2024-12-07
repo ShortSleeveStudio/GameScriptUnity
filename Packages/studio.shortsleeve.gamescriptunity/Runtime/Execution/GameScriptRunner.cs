@@ -36,14 +36,6 @@ namespace GameScript
                 throw new Exception("Tried to initialize GameScript more than once");
             m_Database = new();
             await m_Database.Initialize(m_Settings, token);
-
-            // Initialize runtime state
-            m_ContextsActive = new();
-            m_ContextsInactive = new();
-            for (uint i = 0; i < m_Settings.InitialConversationPool; i++)
-            {
-                m_ContextsInactive.AddLast(new RunnerContext(m_Settings));
-            }
         }
 
         public ActiveConversation StartConversation(
@@ -146,7 +138,14 @@ namespace GameScript
         #region Unity Lifecycle
         private void Awake()
         {
+            // Initialize runtime state
             m_MainThread = Thread.CurrentThread;
+            m_ContextsActive = new();
+            m_ContextsInactive = new();
+            for (uint i = 0; i < m_Settings.InitialConversationPool; i++)
+            {
+                m_ContextsInactive.AddLast(new RunnerContext(m_Settings));
+            }
         }
 
         private void Update()
