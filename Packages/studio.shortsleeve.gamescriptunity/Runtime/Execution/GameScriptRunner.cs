@@ -29,13 +29,13 @@ namespace GameScript
         #region Public API
         public GameScriptDatabase Database => m_Database;
 
-        public async Awaitable Initialize()
+        public async Awaitable Initialize(CancellationToken token)
         {
             // Deserialize database
             if (m_Database != null)
                 throw new Exception("Tried to initialize GameScript more than once");
             m_Database = new();
-            await m_Database.Initialize(m_Settings);
+            await m_Database.Initialize(m_Settings, token);
 
             // Initialize runtime state
             m_ContextsActive = new();

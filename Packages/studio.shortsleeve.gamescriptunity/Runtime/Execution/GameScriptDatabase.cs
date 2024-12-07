@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using UnityEngine;
 
 namespace GameScript
@@ -49,9 +50,7 @@ namespace GameScript
         #endregion
 
         #region Internal API
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        internal async Awaitable Initialize(Settings settings)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        internal async Awaitable Initialize(Settings settings, CancellationToken token)
         {
             // Raw data
             byte[] binaryData;
@@ -72,7 +71,10 @@ namespace GameScript
             )
             {
                 // Wait for data
-                await www.SendWebRequest();
+                UnityEngine.Networking.UnityWebRequestAsyncOperation operation =
+                    www.SendWebRequest();
+                while (!operation.isDone)
+                    await Awaitable.NextFrameAsync(token);
 
                 // Error Handling
                 if (www.result != UnityEngine.Networking.UnityWebRequest.Result.Success)
@@ -82,7 +84,10 @@ namespace GameScript
                 binaryData = www.downloadHandler.data;
             }
 #else
-            binaryData = File.ReadAllBytes($"{Application.streamingAssetsPath}{relativePath}");
+            binaryData = await File.ReadAllBytesAsync(
+                $"{Application.streamingAssetsPath}{relativePath}",
+                token
+            );
 #endif
 
             // Decompress and deserialize conversation data

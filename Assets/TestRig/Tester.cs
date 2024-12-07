@@ -81,7 +81,7 @@ public class Tester : MonoBehaviour
 
     private async void Start()
     {
-        await m_GameScriptRunner.Initialize();
+        await m_GameScriptRunner.Initialize(destroyCancellationToken);
     }
     #endregion
 
