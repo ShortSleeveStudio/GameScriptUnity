@@ -85,9 +85,9 @@ namespace GameScript
         public void OnNodeEnter(Node node, ReadyNotifier readyNotifier);
 
         /**
-         * Called when a decision must be made to proceed with the conversation.
+         * Called before proceeding to find the next available node when a decision must be made.
          */
-        public void OnNodeDecision(List<Node> nodes, DecisionNotifier decisionNotifier);
+        public void OnNodeExit(List<Node> nodes, DecisionNotifier decisionNotifier);
 
         /**
          * Called before proceeding to find the next available node.

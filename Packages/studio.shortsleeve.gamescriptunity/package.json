@@ -1,7 +1,7 @@
 {
   "name": "studio.shortsleeve.gamescriptunity",
   "displayName": "GameScriptUnity",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "unity": "2023.2",
   "description": "Cross-platform dialogue middleware",
   "keywords": [

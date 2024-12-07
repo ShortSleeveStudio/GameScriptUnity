@@ -74,7 +74,7 @@ public class ConversationUI : MonoBehaviour, IGameScriptListener
         m_OnComplete(this);
     }
 
-    public void OnNodeDecision(List<Node> nodes, DecisionNotifier decisionNotifier)
+    public void OnNodeExit(List<Node> nodes, DecisionNotifier decisionNotifier)
     {
         for (int i = 0; i < nodes.Count; i++)
         {
