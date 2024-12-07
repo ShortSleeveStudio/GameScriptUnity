@@ -23,11 +23,11 @@ namespace GameScript
         private LinkedList<RunnerContext> m_ContextsActive;
         private LinkedList<RunnerContext> m_ContextsInactive;
         private Thread m_MainThread;
-        private Database m_Database;
+        private GameScriptDatabase m_Database;
         #endregion
 
         #region Public API
-        public GameData GameData => m_Database.GameData;
+        public GameScriptDatabase Database => m_Database;
 
         public async Awaitable Initialize()
         {
