@@ -14,6 +14,7 @@ namespace GameScript
         private GameData m_GameData;
         private Localization m_BinarySearchLocalization;
         private Conversation m_BinarySearchConversation;
+        private Actor m_BinarySearchActor;
         private EmptyProperty m_BinarySearchProperty;
         #endregion
 
@@ -24,6 +25,7 @@ namespace GameScript
             m_BinarySearchProperty = new("");
             m_BinarySearchLocalization = new();
             m_BinarySearchConversation = new();
+            m_BinarySearchActor = new();
         }
         #endregion
 
@@ -38,6 +40,9 @@ namespace GameScript
 
         public Conversation FindConversation(uint conversationId) =>
             Find(conversationId, m_BinarySearchConversation, m_GameData.Conversations);
+
+        public Actor FindActor(uint actorId) =>
+            Find(actorId, m_BinarySearchActor, m_GameData.Actors);
 
         public Property FindProperty(Property[] properties, string propertyName)
         {
