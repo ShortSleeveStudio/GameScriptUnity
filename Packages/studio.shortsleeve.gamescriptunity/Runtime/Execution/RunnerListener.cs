@@ -60,7 +60,9 @@ namespace GameScript
         }
 
         public bool IsValid() =>
-            m_Context.SequenceNumber == m_OriginalSequenceNumber && !m_Signalled;
+            m_Context != null
+            && m_Context.SequenceNumber == m_OriginalSequenceNumber
+            && !m_Signalled;
 
         public void OnDecisionMade(Node node)
         {
